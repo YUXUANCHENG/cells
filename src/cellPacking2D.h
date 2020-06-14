@@ -18,6 +18,7 @@
 */
 
 #include "deformableParticles2D.h"
+#include "subspace.h"
 #include <iostream>
 #include <iomanip>
 #include <string>
@@ -25,27 +26,11 @@
 #include <cstdlib>
 #include <cmath>
 #include <vector>
+#include <stack>
 #include <Eigen/Core>
 #include <Eigen/Dense>
 #include <Eigen/Eigenvalues>
 
-class subspace : public cellPacking2D {
-
-protected:
-	vector<deformableParticles2D*> resident_cells;
-	vector<deformableParticles2D*> cashed_cells;
-
-public:
-	subspace();
-	int look_for_new_box();
-	void cash();
-	void migrate();
-	void calculateForces();
-	void activityCOM_brownian(double T, double v0, double Dr, double vtau, double t_scale, int frames);
-
-
-
-};
 
 class cellPacking2D{
 
@@ -359,7 +344,7 @@ public:
 
 	//void activity(double T, double v0, double Dr, double vtau);
 	void activityCOM(double T, double v0, double Dr, double vtau, double t_scale);
-	virtual void activityCOM_brownian(double T, double v0, double Dr, double vtau, double t_scale, int frames);
+	void activityCOM_brownian(double T, double v0, double Dr, double vtau, double t_scale, int frames);
 	void activityCOM_brownian_test(double T, double v0, double Dr, double vtau, double t_scale);
 	void printCalA();
 	void printContact();
@@ -400,6 +385,15 @@ public:
 		for (int ci = 0; ci < NCELLS; ci++)
 			cell(ci).printVertexPositions_yc(jamPrintObject, ci);
 	};
+
+
+
+	// Sub system functions
+
+	void split_into_subspace();
+	void cash_into(int i, vector<deformableParticles2D*> & cash_list);
+	void migrate_into(int i, deformableParticles2D* migration);
 };
+
 
 #endif

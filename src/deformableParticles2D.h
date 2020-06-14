@@ -175,6 +175,7 @@ public:
 	int segmentForce(deformableParticles2D& onTheRight); // return 0 or 1, depending on contact
 	int vertexForce(deformableParticles2D& onTheRight, double& sigmaXX, double& sigmaXY, double& sigmaYX, double& sigmaYY);
 	int vertexForce(deformableParticles2D &onTheRight, double& sigmaXX, double& sigmaXY, double& sigmaYX, double& sigmaYY, double aij);
+	int vertexForce_cashed(deformableParticles2D& onTheRight, double& sigmaXX, double& sigmaXY, double& sigmaYX, double& sigmaYY);
 	int pwAttractiveContacts(deformableParticles2D &onTheRight);
 	int radialForce(deformableParticles2D& onTheRight, double bscale); 
 
