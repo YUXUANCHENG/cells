@@ -733,6 +733,17 @@ deformableParticles2D& cellPacking2D::cell(int ci){
 	return cellArray[ci];
 }
 
+// return pointer to object of cell ci
+deformableParticles2D* cellPacking2D::cell_pointer(int ci) {
+	// check input is OK
+	if (ci >= NCELLS || ci < 0) {
+		cout << "	ERROR: in cell(), ci = " << ci << " which is out of bounds for cellArray, ending code here." << endl;
+		exit(1);
+	}
+
+	// return object from array of cells
+	return &(cellArray[ci]);
+}
 
 // number of frames in simulation, given NT and NPRINT
 int cellPacking2D::nframes(){

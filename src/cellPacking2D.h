@@ -29,8 +29,29 @@
 #include <Eigen/Dense>
 #include <Eigen/Eigenvalues>
 
+class subspace : public cellPacking2D {
+
+protected:
+	vector<deformableParticles2D*> resident_cells;
+	vector<deformableParticles2D*> cashed_cells;
+
+public:
+	subspace();
+	int look_for_new_box();
+	void cash();
+	void migrate();
+	void calculateForces();
+	void activityCOM_brownian(double T, double v0, double Dr, double vtau, double t_scale, int frames);
+
+
+
+};
+
 class cellPacking2D{
-private:
+
+protected:
+
+	subspace* subsystem;
 
 	// int scalars
 	int NDIM;						// spatial dimension (will always be 2)
@@ -152,6 +173,7 @@ public:
 	double getL(int d) { return L.at(d); };
 
 	deformableParticles2D& cell(int ci);	// return cell object ci
+	deformableParticles2D* cell_pointer(int ci);
 	int nframes();							// number of frames in the simulation
 	int cmindex(int ci, int cj);			// contact matrix index
 	int contacts(int ci, int cj);			// contact matrix element
@@ -200,7 +222,7 @@ public:
 
 	***************************/
 
-	void calculateForces();
+	virtual void calculateForces();
 	void gelationForces();
 
 
@@ -337,7 +359,7 @@ public:
 
 	//void activity(double T, double v0, double Dr, double vtau);
 	void activityCOM(double T, double v0, double Dr, double vtau, double t_scale);
-	void activityCOM_brownian(double T, double v0, double Dr, double vtau, double t_scale, int frames);
+	virtual void activityCOM_brownian(double T, double v0, double Dr, double vtau, double t_scale, int frames);
 	void activityCOM_brownian_test(double T, double v0, double Dr, double vtau, double t_scale);
 	void printCalA();
 	void printContact();
