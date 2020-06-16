@@ -14,6 +14,8 @@
 
 using namespace std;
 
+class cellPacking2D;
+
 class subspace{
 
 protected:

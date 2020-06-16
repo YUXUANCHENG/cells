@@ -646,6 +646,7 @@ public:
 	void paralell()
 	{
 		Ftolerance = 1e-7;
+
 #pragma omp parallel
 		{
 			int ID = omp_get_thread_num();
@@ -657,7 +658,7 @@ public:
 		std::ofstream v0PrintObject;
 		v0PrintObject.open("v0.txt");
 
-		for (int i = 5; i < 6; i++) {
+		for (int i = 4; i < 5; i++) {
 
 
 			// system size
@@ -715,7 +716,7 @@ public:
 			cellPacking2D jammed_state;
 			cell_group.saveState(jammed_state);
 
-			for (int j = 5; j < 6; j++) {
+			for (int j = 4; j < 5; j++) {
 
 				cout << "Loop i, j = " << i << "," << j << endl;
 
@@ -725,7 +726,7 @@ public:
 				Dr = 1e-2;
 				kl = 0.1;
 				//kb = 0.0 + double(j) * 0.03;
-				kb = 0.1;
+				kb = 0.0;
 
 				v0PrintObject << v0 << "," << Dr << "," << kb << "," << kl << "," << NCELLS << "," << phiTargetTmp << endl;
 

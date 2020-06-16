@@ -334,7 +334,7 @@ void subspace::activityCOM_brownian_insub(double T, double v0, double Dr, double
 		//need to avoid deadlock
 #pragma omp barrier
 		// To avoid deadlock, migrate sequencially
-#pragma omp criticle
+#pragma omp critical
 		migrate_out();
 
 #pragma omp barrier
