@@ -393,7 +393,7 @@ public:
 	// Sub system functions
 
 	void split_into_subspace();
-	void cash_into(int i, vector<deformableParticles2D*> & cash_list);
+	void cashe_into(int i, vector<deformableParticles2D*> & cash_list);
 	void migrate_into(int i, deformableParticles2D* const & migration);
 	int look_for_new_box(deformableParticles2D & cell);
 };

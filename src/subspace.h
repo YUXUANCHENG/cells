@@ -48,13 +48,13 @@ protected:
 public:
 	subspace();
 
-	void cash_out(int direction);
-	void reset_cash();
+	void cashe_out(int direction);
+	void reset_cashe();
 	int neighbor_box(int direction, int upper_lower);
 	double find_boundary(int direction, int upper_lower);
 	void migrate_out();
 
-	void cash_in(vector<deformableParticles2D*>& cash_list);
+	void cashe_in(vector<deformableParticles2D*>& cash_list);
 	void migrate_in(deformableParticles2D* const & migration);
 
 	void calculateForces_insub();

@@ -18,9 +18,9 @@ void cellPacking2D::split_into_subspace() {
 	}
 };
 
-// cash list send to subsystems
-void cellPacking2D::cash_into(int i, vector<deformableParticles2D*>& cash_list) {
-	subsystem[i].cash_in(cash_list);
+// cashe list send to subsystems
+void cellPacking2D::cashe_into(int i, vector<deformableParticles2D*>& cash_list) {
+	subsystem[i].cashe_in(cash_list);
 };
 
 // migrate cells into subsystems
@@ -41,8 +41,8 @@ int cellPacking2D::look_for_new_box(deformableParticles2D & cell) {
 	return box_id;
 }
 
-// cash cells into cash list
-void subspace::cash_in(vector<deformableParticles2D*>& cash_list) {
+// cashe cells into cashe list
+void subspace::cashe_in(vector<deformableParticles2D*>& cash_list) {
 	cashed_cells.insert(cashed_cells.end(),cash_list.begin(),cash_list.end());
 };
 
@@ -51,15 +51,15 @@ void subspace::migrate_in(deformableParticles2D* const & migration) {
 	resident_cells.push_back(migration);
 };
 
-// reset cash system
-void subspace::reset_cash() {
+// reset cashe system
+void subspace::reset_cashe() {
 	if (!cashed_cells.empty()) {
 		cashed_cells.clear();
 	}
 }
 
-// send cash list 
-void subspace::cash_out(int direction) {
+// send cashe list 
+void subspace::cashe_out(int direction) {
 
 	// list indicates near boundary cells that need to be sent to neighbor boxes
 	vector<deformableParticles2D*> cash_out_list_lower;
@@ -104,8 +104,8 @@ void subspace::cash_out(int direction) {
 	}
 
 	// send to other boxes
-	pointer_to_system->cash_into(lower_index, cash_out_list_lower);
-	pointer_to_system->cash_into(upper_index, cash_out_list_upper);
+	pointer_to_system->cashe_into(lower_index, cash_out_list_lower);
+	pointer_to_system->cashe_into(upper_index, cash_out_list_upper);
 
 };
 
@@ -315,12 +315,23 @@ void subspace::activityCOM_brownian_insub(double T, double v0, double Dr, double
 		// reset contacts before force calculation
 		//resetContacts();
 
+		//need to avoid deadlock
 #pragma omp barrier
+#pragma omp criticle
 		migrate_out();
 #pragma omp barrier
-		cash_out(0);
+		reset_cashe();
 #pragma omp barrier
-		cash_out(1);
+		cashe_out(0);
+
+		// To avoid deadlock, only update odd or even box id
+#pragma omp barrier
+		int y_id = floor(box_id / N_systems[0]);
+		if (y_id % 2 == 0)
+			cashe_out(1);
+#pragma omp barrier
+		if (y_id % 2 == 1)
+			cashe_out(1);
 
 
 
