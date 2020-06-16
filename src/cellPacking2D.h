@@ -36,7 +36,7 @@ class cellPacking2D{
 
 protected:
 
-	subspace* subsystem;
+	subspace* subsystem = nullptr;
 
 	// int scalars
 	int NDIM;						// spatial dimension (will always be 2)
@@ -58,6 +58,8 @@ protected:
 
 	// boundary lengths
 	std::vector<double> L;
+
+	int N_systems[2];
 
 	// virial stresses
 	double sigmaXX, sigmaXY, sigmaYX, sigmaYY;
@@ -392,7 +394,8 @@ public:
 
 	void split_into_subspace();
 	void cash_into(int i, vector<deformableParticles2D*> & cash_list);
-	void migrate_into(int i, deformableParticles2D* migration);
+	void migrate_into(int i, deformableParticles2D* const & migration);
+	int look_for_new_box(deformableParticles2D & cell);
 };
 
 

@@ -384,6 +384,12 @@ cellPacking2D::~cellPacking2D(){
 		contactMatrix = nullptr;
 	}
 
+	if (subsystem) {
+		delete[] subsystem;
+		subsystem = nullptr;
+	}
+
+
 	// close file objects
 	packingPrintObject.close();
 	energyPrintObject.close();

@@ -15,11 +15,23 @@ using namespace std;
 class subspace{
 
 protected:
+
+	// resident cells and cashed cells
 	vector<deformableParticles2D*> resident_cells;
 	vector<deformableParticles2D*> cashed_cells;
 
-	vector<deformableParticles2D*> cash_out_list;
-	stack<deformableParticles2D*> migrate_out_list;
+	// list indicates near boundary cells that migrate to neighbor boxes
+	stack<int> migrate_out_list;
+	stack<int> migrate_out_destination;
+
+	// pointer to the whole system (cell_group)
+	cellPacking2D* pointer_to_system;
+
+	// which box is this
+	int box_id;
+
+	vector<double> L;
+	int N_systems[2];
 
 	int NDIM = 2;
 
@@ -27,22 +39,27 @@ protected:
 	double sigmaXY = 0.0;
 	double sigmaYX = 0.0;
 	double sigmaYY = 0.0;
-
 	double dt0;
 	double PI = 4 * atan(1);
+	
+	// indicate what fraction of the system size will be cashed
+	double cashed_fraction;
 
 public:
 	subspace();
-	int look_for_new_box(deformableParticles2D*& cell);
-	void cash_out();
+
+	void cash_out(int direction);
+	void reset_cash();
+	int neighbor_box(int direction, int upper_lower);
+	double find_boundary(int direction, int upper_lower);
 	void migrate_out();
 
 	void cash_in(vector<deformableParticles2D*>& cash_list);
-	void migrate_in(deformableParticles2D*& migration);
+	void migrate_in(deformableParticles2D* const & migration);
 
 	void calculateForces_insub();
 	void activityCOM_brownian_insub(double T, double v0, double Dr, double vtau, double t_scale, int frames, double scaled_v);
-	void conserve_momentum()
+	void conserve_momentum();
 
 
 };
