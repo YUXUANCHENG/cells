@@ -10,6 +10,10 @@ using namespace std;
 void cellPacking2D::split_into_subspace() {
 	int box;
 	subsystem = new subspace[N_systems[0] * N_systems[1]];
+
+	for (int i = 0; i < N_systems[0] * N_systems[1]; i++) {
+		(subsystem[i]).initialize(this, L, N_systems, i, dt0);
+	}
 	
 	// assign cells into subsystems
 	for (int ci = 0; ci < NCELLS; ci++) {
@@ -39,6 +43,18 @@ int cellPacking2D::look_for_new_box(deformableParticles2D & cell) {
 	box_id = y_id * N_systems[0] + x_id;
 
 	return box_id;
+}
+
+void cellPacking2D::activityCOM_brownian_subsystem(int N_x, int N_y, double T, double v0, double Dr, double vtau, double t_scale, int frames) {
+
+	N_systems.push_back(N_x);
+	N_systems.push_back(N_y);
+	split_into_subspace();
+
+#pragma omp parallel for
+	for(int i = 0; i < N_systems[0] * N_systems[1]; i++)
+		(subsystem[i]).activityCOM_brownian_insub(T, v0, Dr, vtau, t_scale, frames);
+
 }
 
 // cashe cells into cashe list
@@ -273,7 +289,7 @@ void subspace::calculateForces_insub() {
 
 
 // active brownian in subsystems
-void subspace::activityCOM_brownian_insub(double T, double v0, double Dr, double vtau, double t_scale, int frames, double scaled_v) {
+void subspace::activityCOM_brownian_insub(double T, double v0, double Dr, double vtau, double t_scale, int frames) {
 
 
 	int ci, vi, d;
@@ -292,7 +308,7 @@ void subspace::activityCOM_brownian_insub(double T, double v0, double Dr, double
 	double random_angle;
 
 	// Scale velocity by avg cell radius
-	//double scaled_v = scale_v(v0);
+	double scaled_v = pointer_to_system->scale_v(v0);
 
 	// Reset velocity
 	if (!resident_cells.empty()) {
@@ -317,10 +333,14 @@ void subspace::activityCOM_brownian_insub(double T, double v0, double Dr, double
 
 		//need to avoid deadlock
 #pragma omp barrier
+		// To avoid deadlock, migrate sequencially
 #pragma omp criticle
 		migrate_out();
+
 #pragma omp barrier
 		reset_cashe();
+
+		// seems like there is no deadlock when cashe at x direction
 #pragma omp barrier
 		cashe_out(0);
 
@@ -332,7 +352,7 @@ void subspace::activityCOM_brownian_insub(double T, double v0, double Dr, double
 #pragma omp barrier
 		if (y_id % 2 == 1)
 			cashe_out(1);
-
+#pragma omp barrier
 
 
 

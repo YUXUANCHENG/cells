@@ -2,6 +2,7 @@
 #define SUBSPACE_H
 
 #include "deformableParticles2D.h"
+#include "cellPacking2D.h"
 #include <iostream>
 #include <iomanip>
 #include <string>
@@ -9,6 +10,7 @@
 #include <cstdlib>
 #include <cmath>
 #include <vector>
+#include <stack>
 
 using namespace std;
 
@@ -25,13 +27,13 @@ protected:
 	stack<int> migrate_out_destination;
 
 	// pointer to the whole system (cell_group)
-	cellPacking2D* pointer_to_system;
+	cellPacking2D * pointer_to_system;
 
 	// which box is this
 	int box_id;
 
 	vector<double> L;
-	int N_systems[2];
+	vector<int> N_systems;
 
 	int NDIM = 2;
 
@@ -46,7 +48,14 @@ protected:
 	double cashed_fraction;
 
 public:
-	subspace();
+
+	void initialize(cellPacking2D * const & pointer, vector<double> const & L, vector<int> const& N_systems,int box_id, double const & dt0) {
+		pointer_to_system = pointer;
+		this->L = L;
+		this->box_id = box_id;
+		this->N_systems = N_systems;
+		this->dt0 = dt0;
+	};
 
 	void cashe_out(int direction);
 	void reset_cashe();
@@ -58,7 +67,7 @@ public:
 	void migrate_in(deformableParticles2D* const & migration);
 
 	void calculateForces_insub();
-	void activityCOM_brownian_insub(double T, double v0, double Dr, double vtau, double t_scale, int frames, double scaled_v);
+	void activityCOM_brownian_insub(double T, double v0, double Dr, double vtau, double t_scale, int frames);
 	void conserve_momentum();
 
 

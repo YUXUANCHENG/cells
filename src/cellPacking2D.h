@@ -59,7 +59,7 @@ protected:
 	// boundary lengths
 	std::vector<double> L;
 
-	int N_systems[2];
+	std::vector<int> N_systems ;
 
 	// virial stresses
 	double sigmaXX, sigmaXY, sigmaYX, sigmaYY;
@@ -396,6 +396,7 @@ public:
 	void cashe_into(int i, vector<deformableParticles2D*> & cash_list);
 	void migrate_into(int i, deformableParticles2D* const & migration);
 	int look_for_new_box(deformableParticles2D & cell);
+	void activityCOM_brownian_subsystem(int N_x, int N_y, double T, double v0, double Dr, double vtau, double t_scale, int frames);
 };
 
 
