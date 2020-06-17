@@ -51,7 +51,7 @@ void cellPacking2D::activityCOM_brownian_subsystem(int N_x, int N_y, double T, d
 	N_systems.push_back(N_y);
 	split_into_subspace();
 
-	//omp_set_num_threads(1);
+omp_set_num_threads(N_x * N_y);
 #pragma omp parallel
 	{
 		int i = omp_get_thread_num();
