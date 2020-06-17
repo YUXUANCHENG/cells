@@ -1606,7 +1606,7 @@ void cellPacking2D::fireMinimizeF(double Ftol, double& Fcheck, double& Kcheck){
 	calculateForces();
 
 	// rescale velocities
-	rescaleVelocities(Trescale);
+	//rescaleVelocities(Trescale);
 
 	// norm of total force vector, kinetic energy
 	F = forceRMS();

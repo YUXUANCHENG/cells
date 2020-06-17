@@ -47,7 +47,7 @@ protected:
 	double PI = 4 * atan(1);
 	
 	// indicate what fraction of the system size will be cashed
-	double cashed_fraction;
+	double cashed_fraction = 0.3;
 
 public:
 

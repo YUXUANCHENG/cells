@@ -51,10 +51,12 @@ void cellPacking2D::activityCOM_brownian_subsystem(int N_x, int N_y, double T, d
 	N_systems.push_back(N_y);
 	split_into_subspace();
 
-#pragma omp parallel for
-	for(int i = 0; i < N_systems[0] * N_systems[1]; i++)
+	//omp_set_num_threads(1);
+#pragma omp parallel
+	{
+		int i = omp_get_thread_num();
 		(subsystem[i]).activityCOM_brownian_insub(T, v0, Dr, vtau, t_scale, frames);
-
+	}
 }
 
 // cashe cells into cashe list
@@ -275,7 +277,7 @@ void subspace::calculateForces_insub() {
 			if (!cashed_cells.empty()) {
 				// forces between resident cell and cashed cell
 				for (ck = 0; ck < cashed_cells.size(); ck++) {
-					inContact = resident_cells[ci]->vertexForce_cashed(*resident_cells[ck], sigmaXX, sigmaXY, sigmaYX, sigmaYY);
+					inContact = resident_cells[ci]->vertexForce_cashed(*cashed_cells[ck], sigmaXX, sigmaXY, sigmaYX, sigmaYY);
 				}
 			}
 
@@ -295,6 +297,7 @@ void subspace::activityCOM_brownian_insub(double T, double v0, double Dr, double
 	int ci, vi, d;
 	int count = 0;
 	double t = 0.0;
+	double phi = 0.0;
 
 	// Cal print frequency
 	int print_frequency = floor(T / (dt0 * t_scale * frames));
@@ -353,8 +356,19 @@ void subspace::activityCOM_brownian_insub(double T, double v0, double Dr, double
 		if (y_id % 2 == 1)
 			cashe_out(1);
 #pragma omp barrier
+	
+#pragma omp master
+		{
+		//phi = pointer_to_system->packingFraction();
 
-
+		if (count % print_frequency == 0) {
+			pointer_to_system->printJammedConfig_yc();
+			//pointer_to_system->phiPrintObject << phi << endl;
+			pointer_to_system->printCalA();
+			//pointer_to_system->printContact();
+			pointer_to_system->printV();
+		}
+		}
 
 		// calculate forces
 		calculateForces_insub();
@@ -373,18 +387,6 @@ void subspace::activityCOM_brownian_insub(double T, double v0, double Dr, double
 
 		// Reset COM velocity
 		conserve_momentum();
-
-		/*
-		phi = packingFraction();
-
-		if (count % print_frequency == 0) {
-			printJammedConfig_yc();
-			phiPrintObject << phi << endl;
-			printCalA();
-			printContact();
-			printV();
-		}
-		*/
 	}
 
 

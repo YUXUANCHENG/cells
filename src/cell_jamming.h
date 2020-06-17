@@ -646,34 +646,34 @@ public:
 	void paralell()
 	{
 		Ftolerance = 1e-7;
-
 #pragma omp parallel
 		{
-			int ID = omp_get_thread_num();
-
-			cout << "hello " << ID << endl;
-
+#pragma omp master
+			{
+			int N_threads = omp_get_num_threads();
+			cout << " N_threads =  " << N_threads << endl;
+			}
 		}
 
 		std::ofstream v0PrintObject;
 		v0PrintObject.open("v0.txt");
 
-		for (int i = 4; i < 5; i++) {
+		for (int i = 0; i < 1; i++) {
 
 
 			// system size
 			int NCELLS = 16;
 			int NV = 16;
-			int seed = 5;
+			int seed = 6;
 			double Lini = 1.0;
 
 			// activity
-			double T = 500.0;
+			double T = 1000.0;
 			double v0;
 			double Dr;
 			double vtau = 1e-2;
 			double t_scale = 1.00;
-			double timeStepMag = 0.001;
+			//double timeStepMag = 0.001;
 
 			// output files
 			string extend = "_jammed_" + to_string(i) + ".txt";
@@ -692,7 +692,7 @@ public:
 
 			// open position output file
 			cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
-			double phiDisk = 0.45 + double(i) * 0.02;
+			double phiDisk = 0.5 + double(i) * 0.02;
 			// Initialze the system as disks
 			cout << "	** Initializing at phiDisk = " << phiDisk << endl;
 			cell_group.initializeGel(NV, phiDisk, sizedev, del);
@@ -747,7 +747,7 @@ public:
 
 				cell_group.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
 				//cell_group.activityCOM_brownian(T, v0, Dr, vtau, t_scale, frames);
-				cell_group.activityCOM_brownian_subsystem(4, 4, T, v0, Dr, vtau, t_scale, frames);
+				cell_group.activityCOM_brownian_subsystem(2, 2, T, v0, Dr, vtau, t_scale, frames);
 
 			}
 		}
