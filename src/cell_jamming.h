@@ -662,7 +662,7 @@ public:
 
 
 			// system size
-			int NCELLS = 1024;
+			int NCELLS = 16;
 			int NV = 16;
 			int seed = 6;
 			double Lini = 1.0;
@@ -747,7 +747,7 @@ public:
 
 				cell_group.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
 				//cell_group.activityCOM_brownian(T, v0, Dr, vtau, t_scale, frames);
-				cell_group.activityCOM_brownian_subsystem(4, 4, T, v0, Dr, vtau, t_scale, frames);
+				cell_group.activityCOM_brownian_subsystem(2, 2, T, v0, Dr, vtau, t_scale, frames);
 
 			}
 		}

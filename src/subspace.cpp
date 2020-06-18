@@ -313,6 +313,10 @@ void subspace::activityCOM_brownian_insub(double T, double v0, double Dr, double
 	// Scale velocity by avg cell radius
 	double scaled_v = pointer_to_system->scale_v(v0);
 
+	// calculate cashed fraction
+	double spacing = L.at(0) / N_systems[0];
+	cashed_fraction = pointer_to_system->scale_v(2) / spacing;
+
 	// Reset velocity
 	if (!resident_cells.empty()) {
 		for (ci = 0; ci < resident_cells.size(); ci++) {
