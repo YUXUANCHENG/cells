@@ -339,6 +339,7 @@ void subspace::activityCOM_brownian_insub(double T, double v0, double Dr, double
 		//resetContacts();
 
 		//need to avoid deadlock
+		/*
 #pragma omp barrier
 		// To avoid deadlock, migrate sequencially
 #pragma omp critical
@@ -360,7 +361,40 @@ void subspace::activityCOM_brownian_insub(double T, double v0, double Dr, double
 		if (y_id % 2 == 1)
 			cashe_out(1);
 #pragma omp barrier
-	
+	*/
+
+#pragma omp barrier
+	// To avoid deadlock, migrate sequencially
+#pragma omp critical
+		{
+			migrate_out();
+		}
+
+#pragma omp barrier
+
+#pragma omp critical
+		{
+		reset_cashe();
+		}
+		// seems like there is no deadlock when cashe at x direction
+#pragma omp barrier
+
+#pragma omp critical
+		{
+			cashe_out(0);
+		}
+
+		// To avoid deadlock, only update odd or even box id
+#pragma omp barrier
+
+#pragma omp critical
+		{
+			cashe_out(1);
+		}
+#pragma omp barrier
+
+
+
 #pragma omp master
 		{
 		//phi = pointer_to_system->packingFraction();
