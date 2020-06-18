@@ -3456,7 +3456,12 @@ void cellPacking2D::spPosVerlet(){
 		for (d=0; d<NDIM; d++){
 			// update new position based on acceleration
 			postmp = cell(ci).cpos(d) + dt*cell(ci).cvel(d) + 0.5*dt*dt*cell(ci).cforce(d);
-
+			if (cell(ci).getpbc(d) == 1) {
+				if (postmp > L.at(d))
+					postmp -= L.at(d);
+				else if (postmp < 0)
+					postmp += L.at(d);
+			}
 			// translate vertices based on cpos change
 			for (vi=0; vi<cell(ci).getNV(); vi++)
 				cell(ci).setVPos(vi,d,cell(ci).vpos(vi,d) + (postmp - cell(ci).cpos(d)));
