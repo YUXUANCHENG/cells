@@ -721,7 +721,7 @@ public:
 				cout << "Loop i, j = " << i << "," << j << endl;
 
 				//v0 = 0.1;
-				v0 = 0.03 + double(j) * 0.03;
+				v0 = 0.03 + double(j) * 0.01;
 				//Dr = 1.0 + double(j) * 1.0;
 				Dr = 1e-2;
 				kl = 0.1;
@@ -747,7 +747,7 @@ public:
 
 				cell_group.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
 				//cell_group.activityCOM_brownian(T, v0, Dr, vtau, t_scale, frames);
-				cell_group.activityCOM_brownian_subsystem(4, 4, T, v0, Dr, vtau, t_scale, frames);
+				cell_group.activityCOM_brownian_subsystem(2, 2, T, v0, Dr, vtau, t_scale, frames);
 
 			}
 		}
