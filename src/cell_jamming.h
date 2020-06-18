@@ -920,7 +920,7 @@ public:
 			//cell_group.findJamming(deltaPhi, Ktolerance, Ftolerance, Ptolerance);
 			double phiTargetTmp = 0.7 + double(i) * 0.02;
 			double deltaPhiTmp = 0.001;
-			cell_group.qsIsoCompression(phiTargetTmp, deltaPhiTmp, Ftolerance);
+			//cell_group.qsIsoCompression(phiTargetTmp, deltaPhiTmp, Ftolerance);
 
 			cellPacking2D jammed_state;
 			cell_group.saveState(jammed_state);
@@ -930,7 +930,7 @@ public:
 				cout << "Loop i, j = " << i << "," << j << endl;
 
 				//v0 = 0.1;
-				v0 = 0.01 + double(j) * 0.01;
+				v0 = 0.03 + double(j) * 0.03;
 				//Dr = 1.0 + double(j) * 1.0;
 				Dr = 1e-2;
 				kl = 0.1;
