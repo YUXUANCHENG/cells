@@ -392,11 +392,14 @@ public:
 
 	// Sub system functions
 
+	void initialize_subsystems(int N_x, int N_y);
 	void split_into_subspace();
 	void cashe_into(int i, vector<deformableParticles2D*> & cash_list);
 	void migrate_into(int i, deformableParticles2D* const & migration);
 	int look_for_new_box(deformableParticles2D & cell);
-	void activityCOM_brownian_subsystem(int N_x, int N_y, double T, double v0, double Dr, double vtau, double t_scale, int frames);
+	void paralell_activityCOM_brownian(double T, double v0, double Dr, double vtau, double t_scale, int frames);
+	void paralell_qsIsoCompression(double phiTarget, double deltaPhi, double Ftol);
+	void paralell_fireMinimizeF(double Ftol, double& Fcheck, double& Kcheck);
 };
 
 

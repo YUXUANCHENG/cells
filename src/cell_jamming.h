@@ -747,7 +747,8 @@ public:
 
 				cell_group.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
 				//cell_group.activityCOM_brownian(T, v0, Dr, vtau, t_scale, frames);
-				cell_group.activityCOM_brownian_subsystem(3, 3, T, v0, Dr, vtau, t_scale, frames);
+				cell_group.initialize_subsystems(4, 4);
+				cell_group.paralell_activityCOM_brownian(T, v0, Dr, vtau, t_scale, frames);
 
 			}
 		}
