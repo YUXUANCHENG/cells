@@ -16,7 +16,8 @@ int main() {
 	//main_function.confluency();
 	//main_function.unjam_N();
 	//main_function.active_brownian();
-	main_function.paralell();
+	//main_function.paralell_active_brownian();
+	main_function.paralell_compression();
 	//main_function.test();
 	
 
