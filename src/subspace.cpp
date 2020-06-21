@@ -129,7 +129,7 @@ void cellPacking2D::paralell_qsIsoCompression(double phiTarget, double deltaPhi,
 		phi = packingFraction();
 
 		// relax shapes (energies calculated in relax function)
-		fireMinimizeF(Ftol, Fcheck, Kcheck);
+		paralell_fireMinimizeF(Ftol, Fcheck, Kcheck);
 
 	}
 
@@ -183,51 +183,114 @@ void cellPacking2D::paralell_fireMinimizeF(double Ftol, double& Fcheck, double& 
 	Fcheck = F;
 	Kcheck = K / NCELLS;
 
+	omp_set_num_threads(N_systems.at(0) * N_systems.at(1));
+#pragma omp parallel
+	{
+		int i = omp_get_thread_num();
+		(subsystem[i]).fireMinimizeF_insub(Ftol, Fcheck, Kcheck, P, vstarnrm, fstarnrm, converged);
+	}
+}
+
+
+
+// FIRE 2.0 force minimization with backstepping
+void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, double & P, double & vstarnrm, double & fstarnrm, bool & converged) {
+	// HARD CODE IN FIRE PARAMETERS
+	const double alpha0 = 0.3;
+	const double finc = 1.1;
+	const double fdec = 0.5;
+	const double falpha = 0.99;
+	const double dtmax = 10 * dt0;
+	const double dtmin = 1e-8 * dt0;
+	const int NMIN = 20;
+	const int NNEGMAX = 2000;
+	const int NDELAY = 1000;
+	int npPos = 0;
+	int npNeg = 0;
+	int npPMIN = 0;
+	double alpha = 0.0;
+	double t = 0.0;
+	double local_P = 0.0;
+
+	// local variables
+	int ci, vi, d, k, kmax;
+	double local_vstarnrm, local_fstarnrm, vtmp, ftmp;
+	double K, F, Pcheck;
+	double xold, xnew, vold, vnew, fold;
+
+	// reset time step
+	double dt = dt0;
+
+	int NCELLS = pointer_to_system->getNCELLS();
+
 	// iterate until system converged
 	kmax = 1e6;
 	for (k = 0; k < kmax; k++) {
 
 		// Step 1. calculate P and norms
-		P = 0.0;
-		vstarnrm = 0.0;
-		fstarnrm = 0.0;
-		for (ci = 0; ci < NCELLS; ci++) {
-			for (vi = 0; vi < cell(ci).getNV(); vi++) {
+
+		// be careful about synchronization
+
+#pragma omp master
+		{
+			P = 0.0;
+			vstarnrm = 0.0;
+			fstarnrm = 0.0;
+			Fcheck = 0.0;
+			Kcheck = 0.0;
+		}
+#pragma omp barrier
+		local_P = 0;
+		local_vstarnrm = 0.0;
+		local_fstarnrm = 0.0;
+		for (ci = 0; ci < resident_cells.size(); ci++) {
+			for (vi = 0; vi < resident_cells[ci]->getNV(); vi++) {
 				for (d = 0; d < NDIM; d++) {
 					// get tmp variables
-					ftmp = cell(ci).vforce(vi, d);
-					vtmp = cell(ci).vvel(vi, d);
+					ftmp = resident_cells[ci]->vforce(vi, d);
+					vtmp = resident_cells[ci]->vvel(vi, d);
 
 					// calculate based on all vertices on all cells
-					P += ftmp * vtmp;
-					vstarnrm += vtmp * vtmp;
-					fstarnrm += ftmp * ftmp;
+					local_P += ftmp * vtmp;
+					local_vstarnrm += vtmp * vtmp;
+					local_fstarnrm += ftmp * ftmp;
 				}
 			}
 		}
 
+		// be careful about synchronization
 
-		// get norms
-		vstarnrm = sqrt(vstarnrm);
-		fstarnrm = sqrt(fstarnrm);
-
-		// output some information to console
-		if (k % NPRINT == 0) {
-			cout << "===================================================" << endl << endl;
-			cout << " 	FIRE MINIMIZATION, k = " << k << endl << endl;
-			cout << "===================================================" << endl;
-			cout << "	* Run data:" << endl;
-			cout << "	* Kcheck 	= " << Kcheck << endl;
-			cout << "	* Fcheck 	= " << Fcheck << endl;
-			cout << "	* Pcheck 	= " << Pcheck << endl;
-			cout << "	* phi 		= " << phi << endl;
-			cout << "	* dt 		= " << dt << endl;
-			cout << "	* alpha 	= " << alpha << endl;
-			cout << "	* P 		= " << P << endl;
-			cout << "	* Pdir 		= " << P / (vstarnrm * fstarnrm) << endl;
-			cout << endl << endl;
+#pragma omp critical
+		{
+			P += local_P;
+			vstarnrm += local_vstarnrm;
+			fstarnrm += local_fstarnrm;
 		}
+		// only master thread
+		// get norms
+#pragma omp barrier
+#pragma omp master
+		{
+			vstarnrm = sqrt(vstarnrm);
+			fstarnrm = sqrt(fstarnrm);
 
+			// output some information to console
+			if (k % pointer_to_system->getNPRINT() == 0) {
+				cout << "===================================================" << endl << endl;
+				cout << " 	FIRE MINIMIZATION, k = " << k << endl << endl;
+				cout << "===================================================" << endl;
+				cout << "	* Run data:" << endl;
+				cout << "	* Kcheck 	= " << Kcheck << endl;
+				cout << "	* Fcheck 	= " << Fcheck << endl;
+				//cout << "	* Pcheck 	= " << Pcheck << endl;
+				cout << "	* phi 		= " << pointer_to_system->getphi() << endl;
+				cout << "	* dt 		= " << dt << endl;
+				cout << "	* alpha 	= " << alpha << endl;
+				cout << "	* P 		= " << P << endl;
+				cout << "	* Pdir 		= " << P / (vstarnrm * fstarnrm) << endl;
+				cout << endl << endl;
+			}
+		}
 
 		// Step 2. Adjust simulation based on net motion of system
 		if (P > 0) {
@@ -269,59 +332,94 @@ void cellPacking2D::paralell_fireMinimizeF(double Ftol, double& Fcheck, double& 
 			}
 
 			// take half step backwards
-			for (ci = 0; ci < NCELLS; ci++) {
-				for (vi = 0; vi < cell(ci).getNV(); vi++) {
+			for (ci = 0; ci < resident_cells.size(); ci++) {
+				for (vi = 0; vi < resident_cells[ci]->getNV(); vi++) {
 					for (d = 0; d < NDIM; d++)
-						cell(ci).setVPos(vi, d, cell(ci).vpos(vi, d) - 0.5 * dt * cell(ci).vvel(vi, d));
+						resident_cells[ci]->setVPos(vi, d, resident_cells[ci]->vpos(vi, d) - 0.5 * dt * resident_cells[ci]->vvel(vi, d));
 				}
 			}
 
 			// reset velocities to 0
-			for (ci = 0; ci < NCELLS; ci++) {
-				for (vi = 0; vi < cell(ci).getNV(); vi++) {
+			for (ci = 0; ci < resident_cells.size(); ci++) {
+				for (vi = 0; vi < resident_cells[ci]->getNV(); vi++) {
 					for (d = 0; d < NDIM; d++)
-						cell(ci).setVVel(vi, d, 0.0);
+						resident_cells[ci]->setVVel(vi, d, 0.0);
 				}
 			}
 		}
 
 		// update velocities if forces are acting
 		if (fstarnrm > 0) {
-			for (ci = 0; ci < NCELLS; ci++) {
-				for (vi = 0; vi < cell(ci).getNV(); vi++) {
+			for (ci = 0; ci < resident_cells.size(); ci++) {
+				for (vi = 0; vi < resident_cells[ci]->getNV(); vi++) {
 					for (d = 0; d < NDIM; d++) {
-						vtmp = (1 - alpha) * cell(ci).vvel(vi, d) + alpha * (cell(ci).vforce(vi, d) / fstarnrm) * vstarnrm;
-						cell(ci).setVVel(vi, d, vtmp);
+						vtmp = (1 - alpha) * resident_cells[ci]->vvel(vi, d) + alpha * (resident_cells[ci]->vforce(vi, d) / fstarnrm) * vstarnrm;
+						resident_cells[ci]->setVVel(vi, d, vtmp);
 					}
 				}
 			}
 		}
 
 		// VV update in FIRE 2.0: position update
-		for (ci = 0; ci < NCELLS; ci++) {
-			cell(ci).verletPositionUpdate(dt);
-			cell(ci).updateCPos();
+		for (ci = 0; ci < resident_cells.size(); ci++) {
+			resident_cells[ci]->verletPositionUpdate(dt);
+			resident_cells[ci]->updateCPos();
 		}
 
+		// perform cashing and migration
+#pragma omp barrier
+// To avoid deadlock, migrate sequencially
+#pragma omp critical
+		{
+			migrate_out();
+		}
+
+#pragma omp barrier
+
+#pragma omp critical
+		{
+			reset_cashe();
+		}
+		// seems like there is no deadlock when cashe at x direction
+#pragma omp barrier
+
+#pragma omp critical
+		{
+			cashe_out(0);
+		}
+
+		// To avoid deadlock, only update odd or even box id
+#pragma omp barrier
+
+#pragma omp critical
+		{
+			cashe_out(1);
+		}
+#pragma omp barrier
+
 		// calculate forces
-		calculateForces();
+		calculateForces_insub();
 
 		// VV update in FIRE 2.0: Velocity update 2
-		for (ci = 0; ci < NCELLS; ci++)
-			cell(ci).verletVelocityUpdate(dt);
+		for (ci = 0; ci < resident_cells.size(); ci++)
+			resident_cells[ci]->verletVelocityUpdate(dt);
 
 		// update t
 		t += dt;
 
 		// track energy and forces
-		F = forceRMS();
-		K = totalKineticEnergy();
-		Pcheck = 0.5 * (sigmaXX + sigmaYY) / (NCELLS * L.at(0) * L.at(1));
+		F = forceRMS_insub();
+		K = totalKineticEnergy_insub();
+		//Pcheck = 0.5 * (sigmaXX + sigmaYY) / (pointer_to_system->getNCELLS() * L.at(0) * L.at(1));
 
 		// scale P and K for convergence checking
-		Fcheck = F;
-		Kcheck = K / NCELLS;
-
+		// be careful about synchronization
+#pragma omp critical
+		{
+			Fcheck += F;
+			Kcheck += K / NCELLS;
+		}
+#pragma omp barrier
 		// update if Fcheck under tol
 		if (abs(Fcheck) < Ftol)
 			npPMIN++;
@@ -333,9 +431,10 @@ void cellPacking2D::paralell_fireMinimizeF(double Ftol, double& Fcheck, double& 
 			cout << "	ERROR: P = " << P << ", ending." << endl;
 			cout << "	** Kcheck = " << Kcheck << endl;
 			cout << "	** Fcheck = " << Fcheck << endl;
-			cout << "	** Pcheck = " << Pcheck << endl;
+			//cout << "	** Pcheck = " << Pcheck << endl;
 			cout << "	** k = " << k << ", t = " << t << endl;
 
+			/*
 			// print minimized config, energy and contact network
 			if (packingPrintObject.is_open()) {
 				cout << "	* Printing vetex positions to file" << endl;
@@ -348,32 +447,44 @@ void cellPacking2D::paralell_fireMinimizeF(double Ftol, double& Fcheck, double& 
 			}
 
 			exit(1);
+			*/
 		}
 
 		// check for convergence
-		converged = (abs(Fcheck) < Ftol && npPMIN > NMIN);
+		// be careful about synchronization, only master thread update parameter converged
 
-		if (converged) {
-			cout << "	** FIRE has converged!" << endl;
-			cout << "	** Fcheck = " << Fcheck << endl;
-			cout << "	** Kcheck = " << Kcheck << endl;
-			cout << "	** Pcheck = " << Pcheck << endl;
-			cout << "	** k = " << k << ", t = " << t << endl;
-			cout << "	** Breaking out of FIRE protocol." << endl;
+#pragma omp master
+		{
+			converged = (abs(Fcheck) < Ftol && npPMIN > NMIN);
 
-			// print minimized config, energy and contact network
-			if (packingPrintObject.is_open()) {
+			if (converged) {
+				cout << "	** FIRE has converged!" << endl;
+				cout << "	** Fcheck = " << Fcheck << endl;
+				cout << "	** Kcheck = " << Kcheck << endl;
+				//cout << "	** Pcheck = " << Pcheck << endl;
+				cout << "	** k = " << k << ", t = " << t << endl;
+				cout << "	** Breaking out of FIRE protocol." << endl;
+
+				// print minimized config, energy and contact network
+				//if (packingPrintObject.is_open()) {
 				cout << "	* Printing vetex positions to file" << endl;
-				printSystemPositions();
-			}
+				pointer_to_system->printSystemPositions();
+				//}
+				/*
+				if (energyPrintObject.is_open()) {
+					cout << "	* Printing cell energy to file" << endl;
+					printSystemEnergy(k);
+				}
 
-			if (energyPrintObject.is_open()) {
-				cout << "	* Printing cell energy to file" << endl;
-				printSystemEnergy(k);
+				break;
+				*/
 			}
-
+		}
+#pragma omp barrier
+		if (converged) {
 			break;
 		}
+
 	}
 
 	// reset dt to be original value before ending function
@@ -387,11 +498,41 @@ void cellPacking2D::paralell_fireMinimizeF(double Ftol, double& Fcheck, double& 
 }
 
 
+double subspace::forceRMS_insub() {
+	int ci, vi, d;
+	int NVTOTAL = 0;
+	double frms = 0.0;
+
+	// loop over forces, calc total force norm
+	for (ci = 0; ci < resident_cells.size(); ci++) {
+		NVTOTAL += resident_cells[ci]->getNV();
+		for (vi = 0; vi < resident_cells[ci]->getNV(); vi++) {
+			for (d = 0; d < NDIM; d++)
+				frms += pow(resident_cells[ci]->vforce(vi, d), 2);
+		}
+	}
+
+	// get force scale
+	frms = sqrt(frms) / (NDIM * NVTOTAL);
+
+	// return
+	return frms;
+}
 
 
+// Calculate total kinetic energy in system
+double subspace::totalKineticEnergy_insub() {
+	// local variables
+	int ci;
+	double val = 0.0;
 
+	// loop over cells, add kinetic energy
+	for (ci = 0; ci < resident_cells.size(); ci++)
+		val += resident_cells[ci]->totalKineticEnergy();
 
-
+	// return value
+	return val;
+}
 
 
 

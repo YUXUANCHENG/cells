@@ -71,7 +71,9 @@ public:
 	void calculateForces_insub();
 	void activityCOM_brownian_insub(double T, double v0, double Dr, double vtau, double t_scale, int frames);
 	void conserve_momentum();
-
+	void fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, double& P, double& vstarnrm, double& fstarnrm, bool& converged);
+	double forceRMS_insub();
+	double totalKineticEnergy_insub();
 
 };
 
