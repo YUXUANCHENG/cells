@@ -223,6 +223,10 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 
 	int NCELLS = pointer_to_system->getNCELLS();
 
+	// calculate cashed fraction
+	double spacing = L.at(0) / N_systems[0];
+	cashed_fraction = pointer_to_system->scale_v(2) / spacing;
+
 	// iterate until system converged
 	kmax = 1e6;
 	for (k = 0; k < kmax; k++) {
@@ -291,7 +295,7 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 				cout << endl << endl;
 			}
 		}
-
+#pragma omp barrier
 		// Step 2. Adjust simulation based on net motion of system
 		if (P > 0) {
 			// increment pos counter
@@ -348,6 +352,7 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 			}
 		}
 
+		double tmp1, tmp2;
 		// update velocities if forces are acting
 		if (fstarnrm > 0) {
 			for (ci = 0; ci < resident_cells.size(); ci++) {
@@ -445,9 +450,9 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 				cout << "	* Printing cell energy to file" << endl;
 				printSystemEnergy(k);
 			}
-
-			exit(1);
 			*/
+			exit(1);
+			
 		}
 
 		// check for convergence
@@ -465,12 +470,13 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 				cout << "	** k = " << k << ", t = " << t << endl;
 				cout << "	** Breaking out of FIRE protocol." << endl;
 
+				/*
 				// print minimized config, energy and contact network
-				//if (packingPrintObject.is_open()) {
+				if (packingPrintObject.is_open()) {
 				cout << "	* Printing vetex positions to file" << endl;
 				pointer_to_system->printSystemPositions();
-				//}
-				/*
+				}
+				
 				if (energyPrintObject.is_open()) {
 					cout << "	* Printing cell energy to file" << endl;
 					printSystemEnergy(k);
