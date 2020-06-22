@@ -155,8 +155,8 @@ public:
 	double& getSigmaXY() { return sigmaXY; };
 	double& getSigmaYX() { return sigmaYX; };
 	double& getSigmaYY() { return sigmaYY; };
-	double& getNcc() { return Ncc };
-	double& getNvv() { return Nvv };
+	double& getNcc() { return Ncc; };
+	double& getNvv() { return Nvv; };
 
 	// box len
 	double getL(int d) { return L.at(d); };

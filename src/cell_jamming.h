@@ -872,6 +872,78 @@ public:
 		cout << "	** FINISHED **   " << endl;
 	};
 
+	void paralell_find_jamming()
+	{
+#pragma omp parallel
+		{
+#pragma omp master
+			{
+				int N_threads = omp_get_num_threads();
+				cout << " N_threads =  " << N_threads << endl;
+			}
+		}
+
+		std::ofstream v0PrintObject;
+		v0PrintObject.open("v0.txt");
+
+		for (int i = 5; i < 6; i++) {
+
+
+			// system size
+			int NCELLS = 128;
+			int NV = 16;
+			int seed = 6;
+			double Lini = 1.0;
+
+			// activity
+			double T = 1000.0;
+			double v0;
+			double Dr;
+			double vtau = 1e-2;
+			double t_scale = 1.00;
+			//double timeStepMag = 0.001;
+
+			// output files
+			string extend = "_jammed_" + to_string(i) + ".txt";
+			//string positionF = "position" + extend;
+			string energyF = "energy" + extend;
+			string jammingF = "jam" + extend;
+			string lengthscaleF = "length" + extend;
+			string phiF = "phi" + extend;
+			string calAF = "calA" + extend;
+			string contactF = "contact" + extend;
+			string vF = "v" + extend;
+
+			// instantiate object
+			cout << "	** Cell packing, NCELLS = " << NCELLS << endl;
+			cellPacking2D cell_group(NCELLS, NT, NPRINT, Lini, seed);
+
+			// open position output file
+			cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
+			double phiDisk = 0.5 + double(i) * 0.02;
+			// Initialze the system as disks
+			cout << "	** Initializing at phiDisk = " << phiDisk << endl;
+			cell_group.initializeGel(NV, phiDisk, sizedev, del);
+
+			// change to DPM
+			cell_group.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
+
+			// set time scale
+			cell_group.vertexDPMTimeScale(timeStepMag);
+
+
+
+			// Compress then relax by FIRE
+			cout << " paralell findJamming " << endl;
+			cell_group.initialize_subsystems(3, 3);
+			cell_group.paralell_findJamming(deltaPhi, Ftolerance, Ptolerance);
+
+			cellPacking2D jammed_state;
+			cell_group.saveState(jammed_state);
+		}
+
+		cout << "	** FINISHED **   " << endl;
+	};
 
 	void test()
 	{

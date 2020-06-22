@@ -284,7 +284,7 @@ void cellPacking2D::paralell_findJamming(double dphi0, double Ftol, double Ptol)
 		cout << "	* Ktest 		= " << Ktest << endl;
 		cout << "	* Ptest 		= " << Ptest << endl;
 		cout << "	* # of contacts = " << nc << endl;
-		cout << "	* # of rattlers = " << nr << endl;
+		//cout << "	* # of rattlers = " << nr << endl;
 		cout << "	* undercompressed = " << undercompressed << endl;
 		cout << "	* overcompressed = " << overcompressed << endl;
 		cout << "	* jammed = " << jammed << endl << endl;

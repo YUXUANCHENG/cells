@@ -17,7 +17,8 @@ int main() {
 	//main_function.unjam_N();
 	//main_function.active_brownian();
 	//main_function.paralell_active_brownian();
-	main_function.paralell_compression();
+	//main_function.paralell_compression();
+	main_function.paralell_find_jamming();
 	//main_function.test();
 	
 
