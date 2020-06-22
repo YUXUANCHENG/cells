@@ -1802,13 +1802,14 @@ int deformableParticles2D::vertexForce_cashed(deformableParticles2D& onTheRight,
 						//onTheRight.setVForce(j, d, onTheRight.vforce(j, d) - ftmp);
 
 						// add to stress tensor
+						// notice that stress between resident and cashed cells are double counted
 						if (d == 0) {
-							sigmaXX -= 2.0 * ftmp * vertexVec.at(0);
-							sigmaXY -= 2.0 * ftmp * vertexVec.at(1);
+							sigmaXX -= 0.5 * 2.0 * ftmp * vertexVec.at(0);
+							sigmaXY -= 0.5 * 2.0 * ftmp * vertexVec.at(1);
 						}
 						else {
-							sigmaYX -= 2.0 * ftmp * vertexVec.at(0);
-							sigmaYY -= 2.0 * ftmp * vertexVec.at(1);
+							sigmaYX -= 0.5 * 2.0 * ftmp * vertexVec.at(0);
+							sigmaYY -= 0.5 * 2.0 * ftmp * vertexVec.at(1);
 						}
 					}
 				}
@@ -1835,12 +1836,12 @@ int deformableParticles2D::vertexForce_cashed(deformableParticles2D& onTheRight,
 
 						// add to stress tensor
 						if (d == 0) {
-							sigmaXX -= 2.0 * ftmp * vertexVec.at(0);
-							sigmaXY -= 2.0 * ftmp * vertexVec.at(1);
+							sigmaXX -= 0.5 * 2.0 * ftmp * vertexVec.at(0);
+							sigmaXY -= 0.5 * 2.0 * ftmp * vertexVec.at(1);
 						}
 						else {
-							sigmaYX -= 2.0 * ftmp * vertexVec.at(0);
-							sigmaYY -= 2.0 * ftmp * vertexVec.at(1);
+							sigmaYX -= 0.5 * 2.0 * ftmp * vertexVec.at(0);
+							sigmaYY -= 0.5 * 2.0 * ftmp * vertexVec.at(1);
 						}
 					}
 				}

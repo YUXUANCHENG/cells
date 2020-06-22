@@ -151,10 +151,10 @@ public:
 	double getT() { return T; };
 	double getphi() { return phi; };
 	double getShearStrain() { return shearStrain; };
-	double getSigmaXX() { return sigmaXX; };
-	double getSigmaXY() { return sigmaXY; };
-	double getSigmaYX() { return sigmaYX; };
-	double getSigmaYY() { return sigmaYY; };
+	double & getSigmaXX() { return sigmaXX; };
+	double & getSigmaXY() { return sigmaXY; };
+	double & getSigmaYX() { return sigmaYX; };
+	double & getSigmaYY() { return sigmaYY; };
 
 	// box len
 	double getL(int d) { return L.at(d); };
@@ -393,6 +393,7 @@ public:
 	// Sub system functions
 
 	void initialize_subsystems(int N_x, int N_y);
+	void reset_subsystems();
 	void split_into_subspace();
 	void cashe_into(int i, vector<deformableParticles2D*> & cash_list);
 	void migrate_into(int i, deformableParticles2D* const & migration);
@@ -400,6 +401,7 @@ public:
 	void paralell_activityCOM_brownian(double T, double v0, double Dr, double vtau, double t_scale, int frames);
 	void paralell_qsIsoCompression(double phiTarget, double deltaPhi, double Ftol);
 	void paralell_fireMinimizeF(double Ftol, double& Fcheck, double& Kcheck);
+	void paralell_findJamming(double dphi0, double Ftol, double Ptol);
 };
 
 

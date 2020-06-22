@@ -53,6 +53,11 @@ void cellPacking2D::initialize_subsystems(int N_x, int N_y) {
 
 }
 
+void  cellPacking2D::reset_subsystems() {
+	for (int i = 0; i < N_systems.at(0) * N_systems.at(1); i++)
+		(subsystem[i]).reset();
+}
+
 void cellPacking2D::paralell_activityCOM_brownian(double T, double v0, double Dr, double vtau, double t_scale, int frames) {
 
 omp_set_num_threads(N_systems.at(0) * N_systems.at(1));
@@ -191,10 +196,214 @@ void cellPacking2D::paralell_fireMinimizeF(double Ftol, double& Fcheck, double& 
 	}
 }
 
+void cellPacking2D::paralell_findJamming(double dphi0, double Ftol, double Ptol) {
+	// local variables
+	double Ptest, Ktest, Ftest;
+	int NSTEPS, k, kmax, kr, nc, nr, ci, cj;
+	cellPacking2D savedState;
+	int NDOF;
+
+	// get total number of degrees of freedom
+	NDOF = 0;
+	for (ci = 0; ci < NCELLS; ci++)
+		NDOF += NDIM * cell(ci).getNV();
+
+	// get initial packing fraction
+	phi = packingFraction();
+
+	// iterator
+	k = 0;
+	kmax = 1e5;
+
+	// jamming variables
+	bool jammed, overcompressed, undercompressed;
+	double rH, rH0, rL, dr0, scaleFactor;
+
+	// compute first dr0 based on current phi (i.e. non root search)
+	dr0 = sqrt((phi + dphi0) / phi);
+
+	// save initial state
+	// r0 = sqrt(cell(0).geta0());
+	saveState(savedState);
+
+	// initialize as unjammed
+	jammed = false;
+
+	// phiJ bounds
+	rH0 = -1;
+	rH = -1;
+	rL = -1;
+
+	// initialize velocities
+	double Tinit = 1e-6;
+	initializeVelocities(Tinit);
+
+	double P = 0.0, vstarnrm = 0.0, fstarnrm = 0.0;
+	bool converged = false;
+
+	// loop until phi is the correct value
+	while (!jammed && k < kmax) {
+		// update iterator
+		k++;
+
+		// relax shapes (energies/forces calculated during FIRE minimization)
+		omp_set_num_threads(N_systems.at(0) * N_systems.at(1));
+#pragma omp parallel
+		{
+			int i = omp_get_thread_num();
+			(subsystem[i]).fireMinimizeF_insub(Ftol, Ftest, Ktest, P, vstarnrm, fstarnrm, converged);
+		}
+
+		// calculate Ptest for comparison
+		Ptest = 0.5 * (sigmaXX + sigmaYY) / (NDOF * L.at(0) * L.at(1));
+
+		// remove rattlers
+		kr = 0;
+		nr = removeRattlers(kr);
+
+		// update number of contacts
+		nc = totalNumberOfContacts();
+
+		// boolean checks
+		undercompressed = ((Ptest < 2.0 * Ptol && rH < 0) || (Ptest < Ptol&& rH > 0));
+		overcompressed = (Ptest > 2.0 * Ptol && nc > 0);
+		jammed = (Ptest < 2.0 * Ptol && Ptest > Ptol && nc > 0 && rH > 0);
+
+		// output to console
+		cout << "===================================================" << endl << endl << endl;
+		cout << " 	quasistatic isotropic compression to jamming " << endl << endl;
+		cout << "===================================================" << endl;
+		cout << "	* k 			= " << k << endl;
+		cout << "	* dphi 			= " << dphi0 << endl;
+		cout << "	* phi 			= " << phi << endl;
+		cout << "	* rH0 			= " << rH0 << endl;
+		cout << "	* rH 			= " << rH << endl;
+		cout << "	* rL 			= " << rL << endl;
+		cout << "	* Ftest 		= " << Ftest << endl;
+		cout << "	* Ktest 		= " << Ktest << endl;
+		cout << "	* Ptest 		= " << Ptest << endl;
+		cout << "	* # of contacts = " << nc << endl;
+		cout << "	* # of rattlers = " << nr << endl;
+		cout << "	* undercompressed = " << undercompressed << endl;
+		cout << "	* overcompressed = " << overcompressed << endl;
+		cout << "	* jammed = " << jammed << endl << endl;
+
+		/*
+		cout << "	* contact matrix:" << endl;
+
+		// print contact matrix to console
+		for (ci=0; ci<NCELLS; ci++){
+			for (cj=0; cj<NCELLS; cj++){
+				if (cj == ci)
+					cout << "0" << "  ";
+				else
+					cout << contacts(ci,cj) << "  ";
+			}
+			cout << endl;
+		}
+
+		// print final two lines
+		cout << endl << endl;
+		*/
+
+		// update packing fraction based on jamming check
+		if (rL < 0) {
+			// if still undercompressed, then grow until overjammed found
+			if (undercompressed) {
+				// set scale to normal compression
+				scaleFactor = dr0;
+			}
+			// if first overcompressed, return to pre-overcompression state, to midpoint between phi and phiH
+			else if (overcompressed) {
+				// current = upper bound length scale r
+				rH = sqrt(cell(0).geta0());
+
+				// save this length scale
+				rH0 = rH;
+
+				// old = old length scale
+				rL = rH / scaleFactor;
+
+				// save overcompressed state
+				saveState(savedState);
+
+				// compute new scale factor
+				scaleFactor = 0.5 * (rH + rL) / rH0;
+
+				// print to console
+				cout << "	-- -- overcompressed for first time, scaleFactor = " << scaleFactor << endl;
+			}
+		}
+		else {
+			// if found undercompressed state, go to state between undercompressed and last overcompressed states (from saved state)
+			if (undercompressed) {
+				// current = new lower bound length scale r
+				rL = sqrt(cell(0).geta0());
+
+				// load state
+				loadState(savedState);
+
+				// compute new scale factor
+				scaleFactor = 0.5 * (rH + rL) / rH0;
+
+				// print to console
+				cout << "	-- -- undercompressed, scaleFactor = " << scaleFactor << endl;
+
+			}
+			else if (overcompressed) {
+				// current = new upper bound length scale r
+				rH = sqrt(cell(0).geta0());
+
+				// load state
+				loadState(savedState);
+
+				// compute new scale factor
+				scaleFactor = 0.5 * (rH + rL) / rH0;
+
+				// print to console
+				cout << "	-- -- overcompressed, scaleFactor = " << scaleFactor << endl;
+			}
+			else if (jammed) {
+				cout << "	** At k = 0, jamming found!" << endl;
+				cout << "	** phiJ = " << phi << endl;
+				cout << "	** F = " << Ftest << endl;
+				cout << "	** P = " << Ptest << endl;
+				cout << "	** K = " << Ktest << endl;
+				cout << "	** nc = " << nc << endl;
+				cout << " WRITING JAMMED CONFIG TO .jam FILE" << endl;
+				cout << " ENDING COMPRESSION SIMULATION" << endl;
+				printJammedConfig_yc();
+				phiPrintObject << phi << endl;
+				printCalA();
+				printContact();
+				break;
+			}
+		}
+
+		//saveState(savedState);
+
+		// grow or shrink particles by scale factor
+		scaleLengths(scaleFactor);
+
+		// update new phi (only update here, do NOT calculate relaxed phi value)
+		phi = packingFraction();
+
+		if (k % 10 == 0) {
+			printJammedConfig_yc();
+			printCalA();
+			printContact();
+		}
+	}
+
+	if (k == kmax) {
+		cout << "	** ERROR: IN 2d cell jamming finding, k reached kmax without finding jamming. Ending." << endl;
+		exit(1);
+	}
+}
 
 
 // FIRE 2.0 force minimization with backstepping
-void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, double & P, double & vstarnrm, double & fstarnrm, bool & converged) {
+void subspace::fireMinimizeF_insub(double Ftol, double & Fcheck, double & Kcheck, double & P, double & vstarnrm, double & fstarnrm, bool & converged) {
 	// HARD CODE IN FIRE PARAMETERS
 	const double alpha0 = 0.3;
 	const double finc = 1.1;
@@ -215,13 +424,17 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 	// local variables
 	int ci, vi, d, k, kmax;
 	double local_vstarnrm, local_fstarnrm, vtmp, ftmp;
-	double K, F, Pcheck;
+	double K, F;
 	double xold, xnew, vold, vnew, fold;
 
 	// reset time step
 	double dt = dt0;
 
 	int NCELLS = pointer_to_system->getNCELLS();
+
+	double & sigmaXX_t = pointer_to_system->getSigmaXX();
+	double & sigmaYY_t = pointer_to_system->getSigmaYY();
+	double Pcheck = 0.5 * (sigmaXX_t + sigmaYY_t) / (NCELLS * L.at(0) * L.at(1));
 
 	// calculate cashed fraction
 	double spacing = L.at(0) / N_systems[0];
@@ -242,6 +455,8 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 			fstarnrm = 0.0;
 			Fcheck = 0.0;
 			Kcheck = 0.0;
+			sigmaXX_t = 0.0;
+			sigmaYY_t = 0.0;
 		}
 #pragma omp barrier
 		local_P = 0;
@@ -286,7 +501,7 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 				cout << "	* Run data:" << endl;
 				cout << "	* Kcheck 	= " << Kcheck << endl;
 				cout << "	* Fcheck 	= " << Fcheck << endl;
-				//cout << "	* Pcheck 	= " << Pcheck << endl;
+				cout << "	* Pcheck 	= " << Pcheck << endl;
 				cout << "	* phi 		= " << pointer_to_system->getphi() << endl;
 				cout << "	* dt 		= " << dt << endl;
 				cout << "	* alpha 	= " << alpha << endl;
@@ -415,7 +630,7 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 		// track energy and forces
 		F = forceRMS_insub();
 		K = totalKineticEnergy_insub();
-		//Pcheck = 0.5 * (sigmaXX + sigmaYY) / (pointer_to_system->getNCELLS() * L.at(0) * L.at(1));
+		
 
 		// scale P and K for convergence checking
 		// be careful about synchronization
@@ -423,8 +638,13 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 		{
 			Fcheck += F;
 			Kcheck += K / NCELLS;
+			sigmaXX_t += sigmaXX;
+			sigmaYY_t += sigmaYY;
 		}
 #pragma omp barrier
+
+		Pcheck = 0.5 * (sigmaXX_t + sigmaYY_t) / (NCELLS * L.at(0) * L.at(1));
+
 		// update if Fcheck under tol
 		if (abs(Fcheck) < Ftol)
 			npPMIN++;
@@ -436,7 +656,7 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 			cout << "	ERROR: P = " << P << ", ending." << endl;
 			cout << "	** Kcheck = " << Kcheck << endl;
 			cout << "	** Fcheck = " << Fcheck << endl;
-			//cout << "	** Pcheck = " << Pcheck << endl;
+			cout << "	** Pcheck = " << Pcheck << endl;
 			cout << "	** k = " << k << ", t = " << t << endl;
 
 			/*
@@ -466,7 +686,7 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 				cout << "	** FIRE has converged!" << endl;
 				cout << "	** Fcheck = " << Fcheck << endl;
 				cout << "	** Kcheck = " << Kcheck << endl;
-				//cout << "	** Pcheck = " << Pcheck << endl;
+				cout << "	** Pcheck = " << Pcheck << endl;
 				cout << "	** k = " << k << ", t = " << t << endl;
 				cout << "	** Breaking out of FIRE protocol." << endl;
 
@@ -562,6 +782,19 @@ void subspace::reset_cashe() {
 		cashed_cells.clear();
 	}
 }
+
+// reset the whole system
+void subspace::reset() {
+
+	reset_cashe();
+	if (!resident_cells.empty()) {
+		resident_cells.clear();
+	}
+}
+
+
+
+
 
 // send cashe list 
 void subspace::cashe_out(int direction) {
@@ -660,6 +893,11 @@ void subspace::migrate_out() {
 	int cell_index;
 	deformableParticles2D* target_cell;
 
+	// stack indicates near boundary cells that migrate to neighbor boxes
+	stack<int> migrate_out_list;
+	stack<int> migrate_out_destination;
+
+	/*
 	// empty the stack
 	while (!migrate_out_list.empty()) {
 		migrate_out_list.pop();
@@ -668,6 +906,7 @@ void subspace::migrate_out() {
 	while (!migrate_out_destination.empty()) {
 		migrate_out_destination.pop();
 	}
+	*/
 
 	// find the migration list
 	for (int ci = 0; ci < resident_cells.size(); ci++) {
@@ -764,6 +1003,7 @@ void subspace::calculateForces_insub() {
 			if (!cashed_cells.empty()) {
 				// forces between resident cell and cashed cell
 				for (ck = 0; ck < cashed_cells.size(); ck++) {
+					// notice that stress between resident and cashed cells are double counted
 					inContact = resident_cells[ci]->vertexForce_cashed(*cashed_cells[ck], sigmaXX, sigmaXY, sigmaYX, sigmaYY);
 				}
 			}

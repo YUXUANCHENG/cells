@@ -24,9 +24,6 @@ protected:
 	vector<deformableParticles2D*> resident_cells;
 	vector<deformableParticles2D*> cashed_cells;
 
-	// list indicates near boundary cells that migrate to neighbor boxes
-	stack<int> migrate_out_list;
-	stack<int> migrate_out_destination;
 
 	// pointer to the whole system (cell_group)
 	cellPacking2D * pointer_to_system;
@@ -61,6 +58,7 @@ public:
 
 	void cashe_out(int direction);
 	void reset_cashe();
+	void reset();
 	int neighbor_box(int direction, int upper_lower);
 	double find_boundary(int direction, int upper_lower);
 	void migrate_out();
