@@ -258,11 +258,12 @@ void cellPacking2D::paralell_findJamming(double dphi0, double Ftol, double Ptol)
 		Ptest = 0.5 * (sigmaXX + sigmaYY) / (NDOF * L.at(0) * L.at(1));
 
 		// remove rattlers
-		kr = 0;
-		nr = removeRattlers(kr);
+		//kr = 0;
+		//nr = removeRattlers(kr);
 
 		// update number of contacts
-		nc = totalNumberOfContacts();
+		//nc = totalNumberOfContacts();
+		nc = Ncc;
 
 		// boolean checks
 		undercompressed = ((Ptest < 2.0 * Ptol && rH < 0) || (Ptest < Ptol&& rH > 0));
@@ -432,9 +433,15 @@ void subspace::fireMinimizeF_insub(double Ftol, double & Fcheck, double & Kcheck
 
 	int NCELLS = pointer_to_system->getNCELLS();
 
+	// system stress
 	double & sigmaXX_t = pointer_to_system->getSigmaXX();
 	double & sigmaYY_t = pointer_to_system->getSigmaYY();
 	double Pcheck = 0.5 * (sigmaXX_t + sigmaYY_t) / (NCELLS * L.at(0) * L.at(1));
+
+	// system contact number
+	double& Ncc_t = pointer_to_system->getNcc();
+	double& Nvv_t = pointer_to_system->getNvv();
+
 
 	// calculate cashed fraction
 	double spacing = L.at(0) / N_systems[0];
@@ -457,6 +464,8 @@ void subspace::fireMinimizeF_insub(double Ftol, double & Fcheck, double & Kcheck
 			Kcheck = 0.0;
 			sigmaXX_t = 0.0;
 			sigmaYY_t = 0.0;
+			Ncc_t = 0.0;
+			Nvv_t = 0.0;
 		}
 #pragma omp barrier
 		local_P = 0;
@@ -640,6 +649,8 @@ void subspace::fireMinimizeF_insub(double Ftol, double & Fcheck, double & Kcheck
 			Kcheck += K / NCELLS;
 			sigmaXX_t += sigmaXX;
 			sigmaYY_t += sigmaYY;
+			Ncc_t += Ncc;
+			Nvv_t += Nvv;
 		}
 #pragma omp barrier
 
@@ -951,12 +962,12 @@ void subspace::calculateForces_insub() {
 	sigmaYY = 0.0;
 
 
-	/*
+	
 	// reset contacts before force calculation
-	resetContacts();
+	//resetContacts();
 	Ncc = 0;
 	Nvv = 0;
-	*/
+	
 
 
 	// reset forces
@@ -987,17 +998,16 @@ void subspace::calculateForces_insub() {
 			// loop over pairs, add info to contact matrix
 			for (cj = ci + 1; cj < resident_cells.size(); cj++) {
 				// calculate forces, add to number of vertex-vertex contacts
-				inContact = resident_cells[ci]->vertexForce(*resident_cells[cj], sigmaXX, sigmaXY, sigmaYX, sigmaYY);
-				/*
-							if (inContact > 0) {
-								// add to cell-cell contacts
-								addContact(ci, cj);
-								Ncc++;
+				inContact = resident_cells[ci]->vertexForce(*resident_cells[cj], sigmaXX, sigmaXY, sigmaYX, sigmaYY);				
+				if (inContact > 0) {
+					// add to cell-cell contacts
+					//addContact(ci, cj);
+					Ncc++;
 
-								// increment vertex-vertex contacts
-								Nvv += inContact;
-							}
-				*/
+					// increment vertex-vertex contacts
+					Nvv += inContact;
+				}
+				
 			}
 
 			if (!cashed_cells.empty()) {
@@ -1005,6 +1015,15 @@ void subspace::calculateForces_insub() {
 				for (ck = 0; ck < cashed_cells.size(); ck++) {
 					// notice that stress between resident and cashed cells are double counted
 					inContact = resident_cells[ci]->vertexForce_cashed(*cashed_cells[ck], sigmaXX, sigmaXY, sigmaYX, sigmaYY);
+					if (inContact > 0) {
+						// add to cell-cell contacts
+						//addContact(ci, cj);
+						// notice this is double counted
+						Ncc += 1/2;
+
+						// increment vertex-vertex contacts
+						Nvv += inContact/2;
+					}
 				}
 			}
 

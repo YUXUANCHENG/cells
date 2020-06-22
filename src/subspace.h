@@ -35,6 +35,8 @@ protected:
 	vector<int> N_systems;
 
 	int NDIM = 2;
+	double Ncc = 0, Nvv = 0;
+
 
 	double sigmaXX = 0.0;
 	double sigmaXY = 0.0;

@@ -4,9 +4,9 @@
 
 /*
 
-	-- PACKING OF CELLS CLASS -- 
+	-- PACKING OF CELLS CLASS --
 
-	* Class for systems of deformable particles, 
+	* Class for systems of deformable particles,
 		holds deformable particles in packing.
 
 	* Mostly wrapper functions for objects in cells array
@@ -32,7 +32,7 @@
 #include <Eigen/Eigenvalues>
 
 
-class cellPacking2D{
+class cellPacking2D {
 
 protected:
 
@@ -45,8 +45,8 @@ protected:
 	int NPRINT;						// number of time steps between print steps
 
 	// contact numbers
-	int Ncc;						// number of cell-cell contacts
-	int Nvv;						// number of vertex-vertex contacts
+	double Ncc;						// number of cell-cell contacts
+	double Nvv;						// number of vertex-vertex contacts
 
 	// double scalars
 	double seed;					// initial seed
@@ -59,11 +59,11 @@ protected:
 	// boundary lengths
 	std::vector<double> L;
 
-	std::vector<int> N_systems ;
+	std::vector<int> N_systems;
 
 	// virial stresses
 	double sigmaXX, sigmaXY, sigmaYX, sigmaYY;
-	
+
 	// array of cells
 	deformableParticles2D* cellArray;
 
@@ -103,7 +103,7 @@ public:
 	void initializeVelocities(double tmp0);
 
 	// file openers
-	void openPackingObject(std::string& str){
+	void openPackingObject(std::string& str) {
 		packingPrintObject.open(str.c_str());
 		if (!packingPrintObject.is_open()) {
 			std::cout << "	ERROR: packingPrintObject could not open " << str << "..." << std::endl;
@@ -111,7 +111,7 @@ public:
 		}
 	}
 
-	void openEnergyObject(std::string& str){
+	void openEnergyObject(std::string& str) {
 		energyPrintObject.open(str.c_str());
 		if (!energyPrintObject.is_open()) {
 			std::cout << "	ERROR: energyPrintObject could not open " << str << "..." << std::endl;
@@ -119,14 +119,14 @@ public:
 		}
 	}
 
-	void openStatObject(std::string& str){
+	void openStatObject(std::string& str) {
 		statPrintObject.open(str.c_str());
 		if (!statPrintObject.is_open()) {
 			std::cout << "	ERROR: statPrintObject could not open " << str << "..." << std::endl;
 			exit(1);
 		}
 	}
-	
+
 	void openJamObject(std::string& str, std::string& str1, std::string& str2, std::string& str3, std::string& str4, std::string& str5) {
 		jamPrintObject.open(str.c_str());
 		lengthscalePrintObject.open(str1.c_str());
@@ -151,10 +151,12 @@ public:
 	double getT() { return T; };
 	double getphi() { return phi; };
 	double getShearStrain() { return shearStrain; };
-	double & getSigmaXX() { return sigmaXX; };
-	double & getSigmaXY() { return sigmaXY; };
-	double & getSigmaYX() { return sigmaYX; };
-	double & getSigmaYY() { return sigmaYY; };
+	double& getSigmaXX() { return sigmaXX; };
+	double& getSigmaXY() { return sigmaXY; };
+	double& getSigmaYX() { return sigmaYX; };
+	double& getSigmaYY() { return sigmaYY; };
+	double& getNcc() { return Ncc };
+	double& getNvv() { return Nvv };
 
 	// box len
 	double getL(int d) { return L.at(d); };
@@ -204,7 +206,7 @@ public:
 
 	/**************************
 
-		Forces and position 
+		Forces and position
 			updates
 
 	***************************/
@@ -395,9 +397,9 @@ public:
 	void initialize_subsystems(int N_x, int N_y);
 	void reset_subsystems();
 	void split_into_subspace();
-	void cashe_into(int i, vector<deformableParticles2D*> & cash_list);
-	void migrate_into(int i, deformableParticles2D* const & migration);
-	int look_for_new_box(deformableParticles2D & cell);
+	void cashe_into(int i, vector<deformableParticles2D*>& cash_list);
+	void migrate_into(int i, deformableParticles2D* const& migration);
+	int look_for_new_box(deformableParticles2D& cell);
 	void paralell_activityCOM_brownian(double T, double v0, double Dr, double vtau, double t_scale, int frames);
 	void paralell_qsIsoCompression(double phiTarget, double deltaPhi, double Ftol);
 	void paralell_fireMinimizeF(double Ftol, double& Fcheck, double& Kcheck);
