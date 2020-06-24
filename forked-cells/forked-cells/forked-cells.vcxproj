@@ -149,11 +149,11 @@
     <ClInclude Include="..\..\src\subspace.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\examples\jamming\parallelJammingExample.cpp" />
     <ClCompile Include="..\..\src\active2D.cpp" />
     <ClCompile Include="..\..\src\cellPacking2D.cpp" />
     <ClCompile Include="..\..\src\deformableParticles2D.cpp" />
     <ClCompile Include="..\..\src\hopper2D.cpp" />
-    <ClCompile Include="..\..\src\main.cpp" />
     <ClCompile Include="..\..\src\stickySP.cpp" />
     <ClCompile Include="..\..\src\subspace.cpp" />
   </ItemGroup>

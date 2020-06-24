@@ -41,13 +41,13 @@
     <ClCompile Include="..\..\src\hopper2D.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\stickySP.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\subspace.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\examples\jamming\parallelJammingExample.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

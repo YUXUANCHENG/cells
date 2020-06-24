@@ -127,13 +127,8 @@ public:
 		}
 	}
 
-	void openJamObject(std::string& str, std::string& str1, std::string& str2, std::string& str3, std::string& str4, std::string& str5) {
+	void openJamObject(std::string& str) {
 		jamPrintObject.open(str.c_str());
-		lengthscalePrintObject.open(str1.c_str());
-		phiPrintObject.open(str2.c_str());
-		calAPrintObject.open(str3.c_str());
-		contactPrintObject.open(str4.c_str());
-		vPrintObject.open(str5.c_str());
 		if (!jamPrintObject.is_open()) {
 			std::cout << "	ERROR: jamPrintObject could not open " << str << "..." << std::endl;
 			exit(1);
