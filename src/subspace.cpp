@@ -485,8 +485,6 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 			P = 0.0;
 			vstarnrm = 0.0;
 			fstarnrm = 0.0;
-			Fcheck = 0.0;
-			Kcheck = 0.0;
 			sigmaXX_t = 0.0;
 			sigmaYY_t = 0.0;
 			Ncc_t = 0.0;
@@ -543,6 +541,9 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 				cout << "	* Pdir 		= " << P / (vstarnrm * fstarnrm) << endl;
 				cout << endl << endl;
 			}
+
+			Fcheck = 0.0;
+			Kcheck = 0.0;
 		}
 #pragma omp barrier
 		// Step 2. Adjust simulation based on net motion of system
