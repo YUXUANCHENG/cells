@@ -16,7 +16,7 @@ using namespace std;
 
 class cellPacking2D;
 
-class subspace{
+class subspace {
 
 protected:
 
@@ -26,7 +26,7 @@ protected:
 
 
 	// pointer to the whole system (cell_group)
-	cellPacking2D * pointer_to_system;
+	cellPacking2D* pointer_to_system;
 
 	// which box is this
 	int box_id;
@@ -44,13 +44,13 @@ protected:
 	double sigmaYY = 0.0;
 	double dt0;
 	double PI = 4 * atan(1);
-	
+
 	// indicate what fraction of the system size will be cashed
 	vector<double> cashed_fraction{ 0.1, 0.1 };
 
 public:
 
-	void initialize(cellPacking2D * const & pointer, vector<double> const & L, vector<int> const& N_systems,int box_id, double const & dt0) {
+	void initialize(cellPacking2D* const& pointer, vector<double> const& L, vector<int> const& N_systems, int box_id, double const& dt0) {
 		pointer_to_system = pointer;
 		this->L = L;
 		this->box_id = box_id;
@@ -66,7 +66,7 @@ public:
 	void migrate_out();
 
 	void cashe_in(vector<deformableParticles2D*>& cash_list);
-	void migrate_in(deformableParticles2D* const & migration);
+	void migrate_in(deformableParticles2D* const& migration);
 
 	void calculateForces_insub();
 	void activityCOM_brownian_insub(double T, double v0, double Dr, double vtau, double t_scale, int frames);

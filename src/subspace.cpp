@@ -9,12 +9,14 @@ using namespace std;
 // split the packing system into smaller subsystems
 void cellPacking2D::split_into_subspace() {
 	int box;
+	// create N[0] * N[1] subsystems
 	subsystem = new subspace[N_systems[0] * N_systems[1]];
 
+	// initialize subsystems
 	for (int i = 0; i < N_systems[0] * N_systems[1]; i++) {
 		(subsystem[i]).initialize(this, L, N_systems, i, dt0);
 	}
-	
+
 	// assign cells into subsystems
 	for (int ci = 0; ci < NCELLS; ci++) {
 		box = look_for_new_box(cell(ci));
@@ -28,39 +30,48 @@ void cellPacking2D::cashe_into(int i, vector<deformableParticles2D*>& cash_list)
 };
 
 // migrate cells into subsystems
-void cellPacking2D::migrate_into(int i, deformableParticles2D* const & migration) {
+void cellPacking2D::migrate_into(int i, deformableParticles2D* const& migration) {
 	subsystem[i].migrate_in(migration);
 };
 
 // figure out which box the cells belong to
-int cellPacking2D::look_for_new_box(deformableParticles2D & cell) {
+int cellPacking2D::look_for_new_box(deformableParticles2D& cell) {
 	int box_id = 0;
 	int x_id = 0;
 	int y_id = 0;
 
-	x_id = floor(cell.cpos(0)/(L.at(0)/N_systems[0]));
+	// figure out x and y index
+	x_id = floor(cell.cpos(0) / (L.at(0) / N_systems[0]));
 	y_id = floor(cell.cpos(1) / (L.at(1) / N_systems[1]));
+
+	// convert into box id
 	box_id = y_id * N_systems[0] + x_id;
 
 	return box_id;
 }
 
+// initialization
 void cellPacking2D::initialize_subsystems(int N_x, int N_y) {
 
+	// set how many boxes along each direction
 	N_systems.push_back(N_x);
 	N_systems.push_back(N_y);
+	// split
 	split_into_subspace();
 
 }
 
+
+// reset system
 void  cellPacking2D::reset_subsystems() {
 	for (int i = 0; i < N_systems.at(0) * N_systems.at(1); i++)
 		(subsystem[i]).reset();
 }
 
+// active brownian simulation
 void cellPacking2D::paralell_activityCOM_brownian(double T, double v0, double Dr, double vtau, double t_scale, int frames) {
 
-omp_set_num_threads(N_systems.at(0) * N_systems.at(1));
+	omp_set_num_threads(N_systems.at(0) * N_systems.at(1));
 #pragma omp parallel
 	{
 		int i = omp_get_thread_num();
@@ -404,7 +415,7 @@ void cellPacking2D::paralell_findJamming(double dphi0, double Ftol, double Ptol)
 
 
 // FIRE 2.0 force minimization with backstepping
-void subspace::fireMinimizeF_insub(double Ftol, double & Fcheck, double & Kcheck, double & P, double & vstarnrm, double & fstarnrm, bool & converged) {
+void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, double& P, double& vstarnrm, double& fstarnrm, bool& converged) {
 	// HARD CODE IN FIRE PARAMETERS
 	const double alpha0 = 0.3;
 	const double finc = 1.1;
@@ -434,8 +445,8 @@ void subspace::fireMinimizeF_insub(double Ftol, double & Fcheck, double & Kcheck
 	int NCELLS = pointer_to_system->getNCELLS();
 
 	// system stress
-	double & sigmaXX_t = pointer_to_system->getSigmaXX();
-	double & sigmaYY_t = pointer_to_system->getSigmaYY();
+	double& sigmaXX_t = pointer_to_system->getSigmaXX();
+	double& sigmaYY_t = pointer_to_system->getSigmaYY();
 	double Pcheck = 0.5 * (sigmaXX_t + sigmaYY_t) / (NCELLS * L.at(0) * L.at(1));
 
 	// system contact number
@@ -605,22 +616,18 @@ void subspace::fireMinimizeF_insub(double Ftol, double & Fcheck, double & Kcheck
 		}
 
 #pragma omp barrier
-
 #pragma omp critical
 		{
 			reset_cashe();
 		}
-		// seems like there is no deadlock when cashe at x direction
+		// sent cashe to neighbors in x direction
 #pragma omp barrier
-
 #pragma omp critical
 		{
 			cashe_out(0);
 		}
-
-		// To avoid deadlock, only update odd or even box id
+		// sent cashe to neighbors in y direction
 #pragma omp barrier
-
 #pragma omp critical
 		{
 			cashe_out(1);
@@ -640,7 +647,7 @@ void subspace::fireMinimizeF_insub(double Ftol, double & Fcheck, double & Kcheck
 		// track energy and forces
 		F = forceRMS_insub();
 		K = totalKineticEnergy_insub();
-		
+
 
 		// scale P and K for convergence checking
 		// be careful about synchronization
@@ -684,7 +691,7 @@ void subspace::fireMinimizeF_insub(double Ftol, double & Fcheck, double & Kcheck
 			}
 			*/
 			exit(1);
-			
+
 		}
 
 		// check for convergence
@@ -708,7 +715,7 @@ void subspace::fireMinimizeF_insub(double Ftol, double & Fcheck, double & Kcheck
 				cout << "	* Printing vetex positions to file" << endl;
 				pointer_to_system->printSystemPositions();
 				}
-				
+
 				if (energyPrintObject.is_open()) {
 					cout << "	* Printing cell energy to file" << endl;
 					printSystemEnergy(k);
@@ -780,11 +787,11 @@ double subspace::totalKineticEnergy_insub() {
 
 // cashe cells into cashe list
 void subspace::cashe_in(vector<deformableParticles2D*>& cash_list) {
-	cashed_cells.insert(cashed_cells.end(),cash_list.begin(),cash_list.end());
+	cashed_cells.insert(cashed_cells.end(), cash_list.begin(), cash_list.end());
 };
 
 // add migrated cells
-void subspace::migrate_in(deformableParticles2D* const & migration) {
+void subspace::migrate_in(deformableParticles2D* const& migration) {
 	resident_cells.push_back(migration);
 };
 
@@ -828,11 +835,11 @@ void subspace::cashe_out(int direction) {
 	if (!resident_cells.empty()) {
 		for (int ci = 0; ci < resident_cells.size(); ci++) {
 			if (resident_cells[ci]->cpos(direction) < lower_boundary + cashed_fraction.at(direction) * spacing &&
-					resident_cells[ci]->cpos(direction) > lower_boundary)
+				resident_cells[ci]->cpos(direction) > lower_boundary)
 
 				cash_out_list_lower.push_back(resident_cells[ci]);
-			else if(resident_cells[ci]->cpos(direction) > upper_boundary - cashed_fraction.at(direction) * spacing &&
-					resident_cells[ci]->cpos(direction) < upper_boundary)
+			else if (resident_cells[ci]->cpos(direction) > upper_boundary - cashed_fraction.at(direction) * spacing &&
+				resident_cells[ci]->cpos(direction) < upper_boundary)
 
 				cash_out_list_upper.push_back(resident_cells[ci]);
 		}
@@ -842,11 +849,11 @@ void subspace::cashe_out(int direction) {
 	if (!cashed_cells.empty() && direction == 1) {
 		for (int ci = 0; ci < cashed_cells.size(); ci++) {
 			if (cashed_cells[ci]->cpos(direction) < lower_boundary + cashed_fraction.at(direction) * spacing &&
-					cashed_cells[ci]->cpos(direction) > lower_boundary)
+				cashed_cells[ci]->cpos(direction) > lower_boundary)
 
 				cash_out_list_lower.push_back(cashed_cells[ci]);
 			else if (cashed_cells[ci]->cpos(direction) > upper_boundary - cashed_fraction.at(direction) * spacing &&
-					cashed_cells[ci]->cpos(direction) < upper_boundary)
+				cashed_cells[ci]->cpos(direction) < upper_boundary)
 
 				cash_out_list_upper.push_back(cashed_cells[ci]);
 		}
@@ -890,7 +897,7 @@ double subspace::find_boundary(int direction, int upper_lower) {
 	// find boundary
 	if (upper_lower == -1)
 		boundary = current[direction] * spacing;
-	else if(upper_lower == 1)
+	else if (upper_lower == 1)
 		boundary = (current[direction] + 1) * spacing;
 
 	return boundary;
@@ -929,9 +936,10 @@ void subspace::migrate_out() {
 		}
 	}
 
-		
+
 	// migrate to other subsystems
-	if (!migrate_out_list.empty()){for (int i = 0; i < migrate_out_list.size(); i++) {
+	if (!migrate_out_list.empty()) {
+		for (int i = 0; i < migrate_out_list.size(); i++) {
 			// migrate backwards, otherwise the list order would be changed
 			cell_index = migrate_out_list.top();
 			target_cell = resident_cells[cell_index];
@@ -955,7 +963,7 @@ void subspace::calculateForces_insub() {
 	// local variables
 	int ci, cj, ck, vi, d, dd, inContact;
 
-	
+
 	// reset virial stresses to 0
 	sigmaXX = 0.0;
 	sigmaXY = 0.0;
@@ -963,17 +971,17 @@ void subspace::calculateForces_insub() {
 	sigmaYY = 0.0;
 
 
-	
+
 	// reset contacts before force calculation
 	//resetContacts();
 	Ncc = 0;
 	Nvv = 0;
-	
+
 
 
 	// reset forces
 	if (!resident_cells.empty()) {
-	
+
 		for (ci = 0; ci < resident_cells.size(); ci++) {
 			// reset center of mass forces
 			for (d = 0; d < NDIM; d++)
@@ -999,7 +1007,7 @@ void subspace::calculateForces_insub() {
 			// loop over pairs, add info to contact matrix
 			for (cj = ci + 1; cj < resident_cells.size(); cj++) {
 				// calculate forces, add to number of vertex-vertex contacts
-				inContact = resident_cells[ci]->vertexForce(*resident_cells[cj], sigmaXX, sigmaXY, sigmaYX, sigmaYY);				
+				inContact = resident_cells[ci]->vertexForce(*resident_cells[cj], sigmaXX, sigmaXY, sigmaYX, sigmaYY);
 				if (inContact > 0) {
 					// add to cell-cell contacts
 					//addContact(ci, cj);
@@ -1008,7 +1016,7 @@ void subspace::calculateForces_insub() {
 					// increment vertex-vertex contacts
 					Nvv += inContact;
 				}
-				
+
 			}
 
 			if (!cashed_cells.empty()) {
@@ -1020,10 +1028,10 @@ void subspace::calculateForces_insub() {
 						// add to cell-cell contacts
 						//addContact(ci, cj);
 						// notice this is double counted
-						Ncc += 1/2;
+						Ncc += 1 / 2;
 
 						// increment vertex-vertex contacts
-						Nvv += inContact/2;
+						Nvv += inContact / 2;
 					}
 				}
 			}
@@ -1061,7 +1069,7 @@ void subspace::activityCOM_brownian_insub(double T, double v0, double Dr, double
 	double scaled_v = pointer_to_system->scale_v(v0);
 
 	// calculate cashed fraction
-	for (d = 0; d < NDIM; d++){
+	for (d = 0; d < NDIM; d++) {
 		double spacing = L.at(d) / N_systems[d];
 		cashed_fraction.at(d) = pointer_to_system->scale_v(2) / spacing;
 	}
@@ -1119,41 +1127,37 @@ void subspace::activityCOM_brownian_insub(double T, double v0, double Dr, double
 		}
 
 #pragma omp barrier
-
+		// reset cashe
 #pragma omp critical
 		{
-		reset_cashe();
+			reset_cashe();
 		}
-		// seems like there is no deadlock when cashe at x direction
 #pragma omp barrier
-
+		// sent cashe to neighbors in x direction
 #pragma omp critical
 		{
 			cashe_out(0);
 		}
-
-		// To avoid deadlock, only update odd or even box id
 #pragma omp barrier
-
+		// sent cashe to neighbors in y direction
 #pragma omp critical
 		{
 			cashe_out(1);
 		}
 #pragma omp barrier
 
-
-
+		// use master thread to print
 #pragma omp master
 		{
-		//phi = pointer_to_system->packingFraction();
+			//phi = pointer_to_system->packingFraction();
 
-		if (count % print_frequency == 0) {
-			pointer_to_system->printJammedConfig_yc();
-			//pointer_to_system->phiPrintObject << phi << endl;
-			pointer_to_system->printCalA();
-			//pointer_to_system->printContact();
-			pointer_to_system->printV();
-		}
+			if (count % print_frequency == 0) {
+				pointer_to_system->printJammedConfig_yc();
+				//pointer_to_system->phiPrintObject << phi << endl;
+				pointer_to_system->printCalA();
+				//pointer_to_system->printContact();
+				pointer_to_system->printV();
+			}
 		}
 
 		// calculate forces
@@ -1179,7 +1183,7 @@ void subspace::activityCOM_brownian_insub(double T, double v0, double Dr, double
 
 };
 
-
+// conserve COM momentum
 void subspace::conserve_momentum() {
 	double factor = 0.0;
 	double system_p[2] = { 0.0, 0.0 };
