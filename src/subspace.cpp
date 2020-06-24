@@ -442,10 +442,11 @@ void subspace::fireMinimizeF_insub(double Ftol, double & Fcheck, double & Kcheck
 	double& Ncc_t = pointer_to_system->getNcc();
 	double& Nvv_t = pointer_to_system->getNvv();
 
-
 	// calculate cashed fraction
-	double spacing = L.at(0) / N_systems[0];
-	cashed_fraction = pointer_to_system->scale_v(2) / spacing;
+	for (d = 0; d < NDIM; d++) {
+		double spacing = L.at(d) / N_systems[d];
+		cashed_fraction.at(d) = pointer_to_system->scale_v(2) / spacing;
+	}
 
 	// iterate until system converged
 	kmax = 1e6;
@@ -826,11 +827,11 @@ void subspace::cashe_out(int direction) {
 	// check if resident cells are near boundary
 	if (!resident_cells.empty()) {
 		for (int ci = 0; ci < resident_cells.size(); ci++) {
-			if (resident_cells[ci]->cpos(direction) < lower_boundary + cashed_fraction * spacing &&
+			if (resident_cells[ci]->cpos(direction) < lower_boundary + cashed_fraction.at(direction) * spacing &&
 					resident_cells[ci]->cpos(direction) > lower_boundary)
 
 				cash_out_list_lower.push_back(resident_cells[ci]);
-			else if(resident_cells[ci]->cpos(direction) > upper_boundary - cashed_fraction * spacing &&
+			else if(resident_cells[ci]->cpos(direction) > upper_boundary - cashed_fraction.at(direction) * spacing &&
 					resident_cells[ci]->cpos(direction) < upper_boundary)
 
 				cash_out_list_upper.push_back(resident_cells[ci]);
@@ -840,11 +841,11 @@ void subspace::cashe_out(int direction) {
 	// check if cashed cells are near boundary, but only for y direction
 	if (!cashed_cells.empty() && direction == 1) {
 		for (int ci = 0; ci < cashed_cells.size(); ci++) {
-			if (cashed_cells[ci]->cpos(direction) < lower_boundary + cashed_fraction * spacing &&
+			if (cashed_cells[ci]->cpos(direction) < lower_boundary + cashed_fraction.at(direction) * spacing &&
 					cashed_cells[ci]->cpos(direction) > lower_boundary)
 
 				cash_out_list_lower.push_back(cashed_cells[ci]);
-			else if (cashed_cells[ci]->cpos(direction) > upper_boundary - cashed_fraction * spacing &&
+			else if (cashed_cells[ci]->cpos(direction) > upper_boundary - cashed_fraction.at(direction) * spacing &&
 					cashed_cells[ci]->cpos(direction) < upper_boundary)
 
 				cash_out_list_upper.push_back(cashed_cells[ci]);
@@ -1060,9 +1061,10 @@ void subspace::activityCOM_brownian_insub(double T, double v0, double Dr, double
 	double scaled_v = pointer_to_system->scale_v(v0);
 
 	// calculate cashed fraction
-	double spacing = L.at(0) / N_systems[0];
-	cashed_fraction = pointer_to_system->scale_v(2) / spacing;
-
+	for (d = 0; d < NDIM; d++){
+		double spacing = L.at(d) / N_systems[d];
+		cashed_fraction.at(d) = pointer_to_system->scale_v(2) / spacing;
+	}
 	// Reset velocity
 	if (!resident_cells.empty()) {
 		for (ci = 0; ci < resident_cells.size(); ci++) {

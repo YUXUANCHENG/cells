@@ -935,7 +935,7 @@ public:
 
 			// Compress then relax by FIRE
 			cout << " paralell findJamming " << endl;
-			cell_group.initialize_subsystems(3, 3);
+			cell_group.initialize_subsystems(4, 5);
 			cell_group.paralell_findJamming(deltaPhi, Ftolerance, Ptolerance);
 
 			cellPacking2D jammed_state;
