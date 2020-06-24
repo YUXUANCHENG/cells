@@ -657,13 +657,15 @@ public:
 		v0PrintObject.open("v0.txt");
 
 		// system size
-		int NCELLS = 16;
+		int NCELLS = 64;
 		int NV = 16;
 		int seed = 5;
 		double Lini = 1.0;
 
+		frames = 50000;
+
 		// activity
-		double T = 10000.0;
+		double T = 1000000.0;
 		double Dr;
 		double vtau = 1e-2;
 		double t_scale = 1.00;
