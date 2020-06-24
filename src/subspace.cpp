@@ -69,7 +69,7 @@ void  cellPacking2D::reset_subsystems() {
 }
 
 // active brownian simulation
-void cellPacking2D::paralell_activityCOM_brownian(double T, double v0, double Dr, double vtau, double t_scale, int frames) {
+void cellPacking2D::parallel_activityCOM_brownian(double T, double v0, double Dr, double vtau, double t_scale, int frames) {
 
 	omp_set_num_threads(N_systems.at(0) * N_systems.at(1));
 #pragma omp parallel
@@ -81,7 +81,7 @@ void cellPacking2D::paralell_activityCOM_brownian(double T, double v0, double Dr
 
 
 // compress isotropically to fixed packing fraction
-void cellPacking2D::paralell_qsIsoCompression(double phiTarget, double deltaPhi, double Ftol) {
+void cellPacking2D::parallel_qsIsoCompression(double phiTarget, double deltaPhi, double Ftol) {
 	// local variables
 	double phi0, phiNew, dphi, Fcheck, Kcheck;
 	int NSTEPS, k;
@@ -128,7 +128,7 @@ void cellPacking2D::paralell_qsIsoCompression(double phiTarget, double deltaPhi,
 
 		// relax shapes (energies calculated in relax function)
 
-		paralell_fireMinimizeF(Ftol, Fcheck, Kcheck);
+		parallel_fireMinimizeF(Ftol, Fcheck, Kcheck);
 		if (k % 10 == 0) {
 			printJammedConfig_yc();
 			printCalA();
@@ -145,7 +145,7 @@ void cellPacking2D::paralell_qsIsoCompression(double phiTarget, double deltaPhi,
 		phi = packingFraction();
 
 		// relax shapes (energies calculated in relax function)
-		paralell_fireMinimizeF(Ftol, Fcheck, Kcheck);
+		parallel_fireMinimizeF(Ftol, Fcheck, Kcheck);
 
 	}
 
@@ -153,7 +153,7 @@ void cellPacking2D::paralell_qsIsoCompression(double phiTarget, double deltaPhi,
 
 
 // FIRE 2.0 force minimization with backstepping
-void cellPacking2D::paralell_fireMinimizeF(double Ftol, double& Fcheck, double& Kcheck) {
+void cellPacking2D::parallel_fireMinimizeF(double Ftol, double& Fcheck, double& Kcheck) {
 	// HARD CODE IN FIRE PARAMETERS
 	const double alpha0 = 0.3;
 	const double finc = 1.1;
@@ -207,7 +207,7 @@ void cellPacking2D::paralell_fireMinimizeF(double Ftol, double& Fcheck, double& 
 	}
 }
 
-void cellPacking2D::paralell_findJamming(double dphi0, double Ftol, double Ptol) {
+void cellPacking2D::parallel_findJamming(double dphi0, double Ftol, double Ptol) {
 	// local variables
 	double Ptest, Ktest, Ftest;
 	int NSTEPS, k, kmax, kr, nc, nr, ci, cj;

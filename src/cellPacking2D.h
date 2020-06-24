@@ -400,10 +400,10 @@ public:
 	void cashe_into(int i, vector<deformableParticles2D*>& cash_list);
 	void migrate_into(int i, deformableParticles2D* const& migration);
 	int look_for_new_box(deformableParticles2D& cell);
-	void paralell_activityCOM_brownian(double T, double v0, double Dr, double vtau, double t_scale, int frames);
-	void paralell_qsIsoCompression(double phiTarget, double deltaPhi, double Ftol);
-	void paralell_fireMinimizeF(double Ftol, double& Fcheck, double& Kcheck);
-	void paralell_findJamming(double dphi0, double Ftol, double Ptol);
+	void parallel_activityCOM_brownian(double T, double v0, double Dr, double vtau, double t_scale, int frames);
+	void parallel_qsIsoCompression(double phiTarget, double deltaPhi, double Ftol);
+	void parallel_fireMinimizeF(double Ftol, double& Fcheck, double& Kcheck);
+	void parallel_findJamming(double dphi0, double Ftol, double Ptol);
 };
 
 
