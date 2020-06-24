@@ -10,7 +10,8 @@ using namespace std;
 void cellPacking2D::split_into_subspace() {
 	int box;
 	// create N[0] * N[1] subsystems
-	subsystem = new subspace[N_systems[0] * N_systems[1]];
+	if(subsystem == nullptr)
+		subsystem = new subspace[N_systems[0] * N_systems[1]];
 
 	// initialize subsystems
 	for (int i = 0; i < N_systems[0] * N_systems[1]; i++) {
@@ -54,8 +55,16 @@ int cellPacking2D::look_for_new_box(deformableParticles2D& cell) {
 void cellPacking2D::initialize_subsystems(int N_x, int N_y) {
 
 	// set how many boxes along each direction
-	N_systems.push_back(N_x);
-	N_systems.push_back(N_y);
+	if(N_systems.size() < 2)
+	{
+		N_systems.push_back(N_x);
+		N_systems.push_back(N_y);
+	}
+	else
+	{
+		N_systems.at(0) = N_x;
+		N_systems.at(1) = N_y;
+	}
 	// split
 	split_into_subspace();
 
@@ -68,6 +77,10 @@ void  cellPacking2D::reset_subsystems() {
 		(subsystem[i]).reset();
 }
 
+void  cellPacking2D::delete_subsystems() {
+	delete[] subsystem;
+	subsystem = nullptr;
+}
 // active brownian simulation
 void cellPacking2D::parallel_activityCOM_brownian(double T, double v0, double Dr, double vtau, double t_scale, int frames) {
 

@@ -396,6 +396,7 @@ public:
 
 	void initialize_subsystems(int N_x, int N_y);
 	void reset_subsystems();
+	void delete_subsystems();
 	void split_into_subspace();
 	void cashe_into(int i, vector<deformableParticles2D*>& cash_list);
 	void migrate_into(int i, deformableParticles2D* const& migration);
