@@ -488,12 +488,12 @@ public:
 	};
 
 	void confluency()
-	{	
+	{
 #pragma omp parallel
 		{
 			int ID = omp_get_thread_num();
 
-			cout << "hello " <<  ID << endl;
+			cout << "hello " << ID << endl;
 
 		}
 
@@ -562,11 +562,11 @@ public:
 			// Compress then relax by FIRE
 			cout << " Compress then relax by FIRE " << endl;
 
-		double phiTargetTmp = phi_max;
-		double deltaPhiTmp = 0.001;
+			double phiTargetTmp = phi_max;
+			double deltaPhiTmp = 0.001;
 
-		cell_group.qsIsoCompression(phiTargetTmp, deltaPhiTmp, Ftolerance);
-		//cell_group.findJamming(deltaPhi, Ktolerance, Ftolerance, Ptolerance);
+			cell_group.qsIsoCompression(phiTargetTmp, deltaPhiTmp, Ftolerance);
+			//cell_group.findJamming(deltaPhi, Ktolerance, Ftolerance, Ptolerance);
 
 			cellPacking2D jammed_state;
 			cell_group.saveState(jammed_state);
@@ -574,9 +574,9 @@ public:
 			for (int j = 0; j < 10; j++) {
 
 				cout << "Loop i, j = " << i << "," << j << endl;
-	
+
 				//v0 = 0.04;
-				double v0 = 0.002 + double(j) * 0.002;
+				double v0 = 0.002 + double(j) * 0.001;
 
 				v0PrintObject << v0 << "," << Dr << "," << kb << "," << kl << "," << calA0 << "," << NCELLS << endl;
 
@@ -614,7 +614,7 @@ public:
 		string calAF = "calA.txt";
 		string contactF = "contact.txt";
 		string vF = "v.txt";
-		
+
 		double calA0 = 1.18;
 
 		// instantiate object
@@ -650,8 +650,8 @@ public:
 		{
 #pragma omp master
 			{
-			int N_threads = omp_get_num_threads();
-			cout << " N_threads =  " << N_threads << endl;
+				int N_threads = omp_get_num_threads();
+				cout << " N_threads =  " << N_threads << endl;
 			}
 		}
 
