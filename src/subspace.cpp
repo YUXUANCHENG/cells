@@ -45,6 +45,10 @@ int cellPacking2D::look_for_new_box(deformableParticles2D& cell) {
 	x_id = floor(cell.cpos(0) / (L.at(0) / N_systems[0]));
 	y_id = floor(cell.cpos(1) / (L.at(1) / N_systems[1]));
 
+	//add periodic boundary just in case
+	x_id = x_id % N_systems[0];
+	y_id = y_id % N_systems[1];
+
 	// convert into box id
 	box_id = y_id * N_systems[0] + x_id;
 
@@ -413,7 +417,7 @@ void cellPacking2D::parallel_findJamming(double dphi0, double Ftol, double Ptol)
 		// update new phi (only update here, do NOT calculate relaxed phi value)
 		phi = packingFraction();
 
-		if (k % 10 == 0) {
+		if (k % 1 == 0) {
 			printJammedConfig_yc();
 			printCalA();
 			printContact();
@@ -473,6 +477,17 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 		cashed_fraction.at(d) = pointer_to_system->scale_v(2) / spacing;
 	}
 
+	calculateForces_insub();	
+#pragma omp barrier
+#pragma omp master
+	{
+		const double Trescale = 1e-8 * NCELLS;
+		pointer_to_system->rescaleVelocities(Trescale);
+		Fcheck = pointer_to_system->forceRMS();
+		Kcheck = pointer_to_system->totalKineticEnergy();
+	}
+#pragma omp barrier
+
 	// iterate until system converged
 	kmax = 1e6;
 	for (k = 0; k < kmax; k++) {
@@ -527,7 +542,7 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 			fstarnrm = sqrt(fstarnrm);
 
 			// output some information to console
-			if (k % pointer_to_system->getNPRINT() == 0) {
+			if (k % pointer_to_system->getNPRINT() == 1) {
 				cout << "===================================================" << endl << endl;
 				cout << " 	FIRE MINIMIZATION, k = " << k << endl << endl;
 				cout << "===================================================" << endl;
@@ -603,7 +618,6 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 			}
 		}
 
-		double tmp1, tmp2;
 		// update velocities if forces are acting
 		if (fstarnrm > 0) {
 			for (ci = 0; ci < resident_cells.size(); ci++) {
@@ -660,7 +674,7 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 		t += dt;
 
 		// track energy and forces
-		F = forceRMS_insub();
+		//F = forceRMS_insub();
 		K = totalKineticEnergy_insub();
 
 
@@ -668,7 +682,7 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 		// be careful about synchronization
 #pragma omp critical
 		{
-			Fcheck += F;
+			//Fcheck += F;
 			Kcheck += K / NCELLS;
 			sigmaXX_t += sigmaXX;
 			sigmaYY_t += sigmaYY;
@@ -679,7 +693,8 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 		// calculate force RMS
 #pragma omp master
 		{
-			Fcheck = sqrt(Fcheck) / (NDIM * NVTOTAL);
+			//Fcheck = sqrt(Fcheck) / (NDIM * NVTOTAL);
+			Fcheck = pointer_to_system->forceRMS();
 		}
 #pragma omp barrier
 
