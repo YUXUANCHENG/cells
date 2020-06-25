@@ -264,7 +264,7 @@ void cellPacking2D::parallel_findJamming(double dphi0, double Ftol, double Ptol)
 
 	// initialize velocities
 	double Tinit = 1e-6;
-	initializeVelocities(Tinit);
+	//initializeVelocities(Tinit);
 
 	double P = 0.0, vstarnrm = 0.0, fstarnrm = 0.0;
 	bool converged = false;
@@ -474,7 +474,12 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 	// calculate cashed fraction
 	for (d = 0; d < NDIM; d++) {
 		double spacing = L.at(d) / N_systems[d];
-		cashed_fraction.at(d) = pointer_to_system->scale_v(2) / spacing;
+		cashed_fraction.at(d) = pointer_to_system->scale_v(cashed_length) / spacing;
+		cout << "cashed fraction at " << d << " = " << cashed_fraction.at(d) << endl;
+		if (cashed_fraction.at(d) > 0.9) {
+			cout << " Too much boxes for two little cells " << endl;
+			exit(1);
+		}
 	}
 
 	calculateForces_insub();	
@@ -682,7 +687,7 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 		// be careful about synchronization
 #pragma omp critical
 		{
-			//Fcheck += F;
+			Fcheck += F;
 			Kcheck += K / NCELLS;
 			sigmaXX_t += sigmaXX;
 			sigmaYY_t += sigmaYY;
@@ -693,8 +698,8 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 		// calculate force RMS
 #pragma omp master
 		{
-			//Fcheck = sqrt(Fcheck) / (NDIM * NVTOTAL);
-			Fcheck = pointer_to_system->forceRMS();
+			Fcheck = sqrt(Fcheck) / (NDIM * NVTOTAL);
+			//Fcheck = pointer_to_system->forceRMS();
 		}
 #pragma omp barrier
 
@@ -1107,7 +1112,12 @@ void subspace::activityCOM_brownian_insub(double T, double v0, double Dr, double
 	// calculate cashed fraction
 	for (d = 0; d < NDIM; d++) {
 		double spacing = L.at(d) / N_systems[d];
-		cashed_fraction.at(d) = pointer_to_system->scale_v(2) / spacing;
+		cashed_fraction.at(d) = pointer_to_system->scale_v(cashed_length) / spacing;
+		cout << "cashed fraction at " << d << " = " << cashed_fraction.at(d) << endl;
+		if (cashed_fraction.at(d) > 0.9) {
+			cout << " Too much boxes for two little cells " << endl;
+			exit(1);
+		}
 	}
 	// Reset velocity
 	if (!resident_cells.empty()) {

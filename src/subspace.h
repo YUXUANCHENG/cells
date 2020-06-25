@@ -47,6 +47,7 @@ protected:
 
 	// indicate what fraction of the system size will be cashed
 	vector<double> cashed_fraction{ 0.1, 0.1 };
+	double cashed_length = 2.5;
 
 public:
 

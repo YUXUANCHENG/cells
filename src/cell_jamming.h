@@ -20,7 +20,7 @@ private:
 
 	// length paramaters
 	const int NT = 1e7;
-	const int NPRINT = 1000;
+	const int NPRINT = 10000;
 	int frames = 1000;
 
 	// simulation constants
