@@ -456,6 +456,7 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 	double dt = dt0;
 
 	int NCELLS = pointer_to_system->getNCELLS();
+	int NVTOTAL = pointer_to_system->getNVTOTAL();
 
 	// system stress
 	double& sigmaXX_t = pointer_to_system->getSigmaXX();
@@ -675,6 +676,12 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 			Nvv_t += Nvv;
 		}
 #pragma omp barrier
+		// calculate force RMS
+#pragma omp master
+		{
+			Fcheck = sqrt(Fcheck) / (NDIM * NVTOTAL);
+		}
+#pragma omp barrier
 
 		Pcheck = 0.5 * (sigmaXX_t + sigmaYY_t) / (NCELLS * L.at(0) * L.at(1));
 
@@ -772,7 +779,7 @@ double subspace::forceRMS_insub() {
 	}
 
 	// get force scale
-	frms = sqrt(frms) / (NDIM * NVTOTAL);
+	//frms = sqrt(frms) / (NDIM * NVTOTAL);
 
 	// return
 	return frms;

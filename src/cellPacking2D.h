@@ -405,6 +405,13 @@ public:
 	void parallel_qsIsoCompression(double phiTarget, double deltaPhi, double Ftol);
 	void parallel_fireMinimizeF(double Ftol, double& Fcheck, double& Kcheck);
 	void parallel_findJamming(double dphi0, double Ftol, double Ptol);
+	int getNVTOTAL() {
+		int NVTOTAL = 0;
+		for (int ci = 0; ci < NCELLS; ci++) {
+			NVTOTAL += cell(ci).getNV();
+		}
+		return NVTOTAL;
+	}
 };
 
 
