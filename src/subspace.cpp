@@ -475,7 +475,6 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 	for (d = 0; d < NDIM; d++) {
 		double spacing = L.at(d) / N_systems[d];
 		cashed_fraction.at(d) = pointer_to_system->scale_v(cashed_length) / spacing;
-		cout << "cashed fraction at " << d << " = " << cashed_fraction.at(d) << endl;
 		if (cashed_fraction.at(d) > 0.9) {
 			cout << " Too much boxes for two little cells " << endl;
 			exit(1);
@@ -486,8 +485,10 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 #pragma omp barrier
 #pragma omp master
 	{
+		for (d = 0; d < NDIM; d++)
+			cout << "cashed fraction at " << d << " = " << cashed_fraction.at(d) << endl;
 		const double Trescale = 1e-8 * NCELLS;
-		pointer_to_system->rescaleVelocities(Trescale);
+		//pointer_to_system->rescaleVelocities(Trescale);
 		Fcheck = pointer_to_system->forceRMS();
 		Kcheck = pointer_to_system->totalKineticEnergy();
 	}
@@ -679,7 +680,7 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 		t += dt;
 
 		// track energy and forces
-		//F = forceRMS_insub();
+		F = forceRMS_insub();
 		K = totalKineticEnergy_insub();
 
 
@@ -1113,12 +1114,19 @@ void subspace::activityCOM_brownian_insub(double T, double v0, double Dr, double
 	for (d = 0; d < NDIM; d++) {
 		double spacing = L.at(d) / N_systems[d];
 		cashed_fraction.at(d) = pointer_to_system->scale_v(cashed_length) / spacing;
-		cout << "cashed fraction at " << d << " = " << cashed_fraction.at(d) << endl;
+		//cout << "cashed fraction at " << d << " = " << cashed_fraction.at(d) << endl;
 		if (cashed_fraction.at(d) > 0.9) {
 			cout << " Too much boxes for two little cells " << endl;
 			exit(1);
 		}
 	}
+
+#pragma omp master
+	{
+		for (d = 0; d < NDIM; d++)
+			cout << "cashed fraction at " << d << " = " << cashed_fraction.at(d) << endl;
+	}
+
 	// Reset velocity
 	if (!resident_cells.empty()) {
 		for (ci = 0; ci < resident_cells.size(); ci++) {
@@ -1203,6 +1211,7 @@ void subspace::activityCOM_brownian_insub(double T, double v0, double Dr, double
 				pointer_to_system->printCalA();
 				//pointer_to_system->printContact();
 				pointer_to_system->printV();
+				cout << "t = " << t << endl;
 			}
 		}
 

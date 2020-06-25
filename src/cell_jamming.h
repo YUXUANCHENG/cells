@@ -62,7 +62,8 @@ private:
 	double Ktolerance = 1e-16;
 	string extend;
 
-
+	int sub_num_x = 4;
+	int sub_num_y = 5;
 
 public:
 
@@ -657,7 +658,7 @@ public:
 		v0PrintObject.open("v0.txt");
 
 		// system size
-		int NCELLS = 16;
+		int NCELLS = 64;
 		int NV = 16;
 		int seed = 5;
 		double Lini = 1.0;
@@ -723,7 +724,7 @@ public:
 			double phiTargetTmp = phi_max;
 			double deltaPhiTmp = 0.001;
 
-			cell_group.initialize_subsystems(2, 2);
+			cell_group.initialize_subsystems(sub_num_x, sub_num_y);
 			cell_group.parallel_qsIsoCompression(phiTargetTmp, deltaPhiTmp, Ftolerance);
 			//cell_group.findJamming(deltaPhi, Ktolerance, Ftolerance, Ptolerance);
 
@@ -757,7 +758,7 @@ public:
 				cell_group.forceVals(calA0, kl, ka, gam, kb, kint, del, aInitial);
 
 				cell_group.reset_subsystems();
-				cell_group.initialize_subsystems(2, 2);
+				cell_group.initialize_subsystems(sub_num_x, sub_num_y);
 				cell_group.parallel_activityCOM_brownian(T, v0, Dr, vtau, t_scale, frames);
 
 			}
@@ -799,7 +800,7 @@ public:
 
 		// Compress then relax by FIRE
 		cout << " Compress then relax by FIRE " << endl;
-		cell_group.initialize_subsystems(2, 2);
+		cell_group.initialize_subsystems(sub_num_x, sub_num_y);
 		cell_group.parallel_findJamming(deltaPhi, Ftolerance, Ptolerance);
 
 		return cell_group.packingFraction();
@@ -1098,7 +1099,7 @@ public:
 
 			// Compress then relax by FIRE
 			cout << " parallel findJamming " << endl;
-			cell_group.initialize_subsystems(4, 5);
+			cell_group.initialize_subsystems(sub_num_x, sub_num_y);
 			cell_group.parallel_findJamming(deltaPhi, Ftolerance, Ptolerance);
 
 			cellPacking2D jammed_state;
