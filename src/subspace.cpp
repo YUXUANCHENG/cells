@@ -858,7 +858,9 @@ double subspace::totalKineticEnergy_insub() {
 
 // cashe cells into cashe list
 void subspace::cashe_in(vector<deformableParticles2D*>& cash_list) {
-	cashed_cells.insert(cashed_cells.end(), cash_list.begin(), cash_list.end());
+	//cashed_cells.insert(cashed_cells.end(), cash_list.begin(), cash_list.end());
+	for (int i = 0; i < cash_list.size(); i++)
+		cashed_cells.push_back(cash_list.at(i));
 };
 
 // add migrated cells
