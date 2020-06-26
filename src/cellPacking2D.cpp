@@ -3071,6 +3071,7 @@ void cellPacking2D::initializeGel(int NV, double phiDisk, double sizeDispersion,
 		cell(ci).seta0(a0tmp);
 		cell(ci).setl0(l0tmp);
 		cell(ci).setdel(delval);
+		cell(ci).set_id(ci);
 	}
 
 	// initialize particle positions

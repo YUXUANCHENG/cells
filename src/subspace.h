@@ -24,6 +24,9 @@ protected:
 	vector<deformableParticles2D*> resident_cells;
 	vector<deformableParticles2D*> cashed_cells;
 
+	// list indicates near boundary cells that need to be sent to neighbor boxes
+	vector<deformableParticles2D*> cash_out_list_lower;
+	vector<deformableParticles2D*> cash_out_list_upper;
 
 	// pointer to the whole system (cell_group)
 	cellPacking2D* pointer_to_system;
@@ -47,6 +50,7 @@ protected:
 
 	// indicate what fraction of the system size will be cashed
 	vector<double> cashed_fraction{ 0.1, 0.1 };
+	double cashed_length = 2;
 
 public:
 
@@ -74,6 +78,8 @@ public:
 	void fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, double& P, double& vstarnrm, double& fstarnrm, bool& converged);
 	double forceRMS_insub();
 	double totalKineticEnergy_insub();
+	double max_length();
+	void print_information();
 
 };
 

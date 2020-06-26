@@ -26,6 +26,8 @@ using namespace std;
 
 class deformableParticles2D{
 private:
+	int id;
+
 	// spatial dimension
 	int NDIM;
 
@@ -103,6 +105,7 @@ public:
 	double getdel() { return del; };
 	double geta() { return a; };
 	double getstrain() { return strain; };
+	int get_id() { return id; };
 
 	// access pbc and box length information
 	int getpbc(int d) { return pbc.at(d); };
@@ -137,6 +140,7 @@ public:
 	void setpbc(int d, int val) { pbc.at(d) = val; };
 	void setL(int d, double val) { L.at(d) = val; };
 	void setstrain(double val) { strain = val; };
+	void set_id(int cell_id) { id = cell_id; };
 
 	// setters (defined in .cpp file)
 	void setVPos(int vertex, int dim, double val);
@@ -237,6 +241,8 @@ public:
 	double cal_mean_v(int d);
 
 	double momentum(int d);
+	double max_length();
+
 };
 
 

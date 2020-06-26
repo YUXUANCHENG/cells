@@ -10,7 +10,8 @@ using namespace std;
 void cellPacking2D::split_into_subspace() {
 	int box;
 	// create N[0] * N[1] subsystems
-	subsystem = new subspace[N_systems[0] * N_systems[1]];
+	if(subsystem == nullptr)
+		subsystem = new subspace[N_systems[0] * N_systems[1]];
 
 	// initialize subsystems
 	for (int i = 0; i < N_systems[0] * N_systems[1]; i++) {
@@ -44,6 +45,10 @@ int cellPacking2D::look_for_new_box(deformableParticles2D& cell) {
 	x_id = floor(cell.cpos(0) / (L.at(0) / N_systems[0]));
 	y_id = floor(cell.cpos(1) / (L.at(1) / N_systems[1]));
 
+	//add periodic boundary just in case
+	x_id = x_id % N_systems[0];
+	y_id = y_id % N_systems[1];
+
 	// convert into box id
 	box_id = y_id * N_systems[0] + x_id;
 
@@ -54,8 +59,16 @@ int cellPacking2D::look_for_new_box(deformableParticles2D& cell) {
 void cellPacking2D::initialize_subsystems(int N_x, int N_y) {
 
 	// set how many boxes along each direction
-	N_systems.push_back(N_x);
-	N_systems.push_back(N_y);
+	if(N_systems.size() < 2)
+	{
+		N_systems.push_back(N_x);
+		N_systems.push_back(N_y);
+	}
+	else
+	{
+		N_systems.at(0) = N_x;
+		N_systems.at(1) = N_y;
+	}
 	// split
 	split_into_subspace();
 
@@ -68,8 +81,12 @@ void  cellPacking2D::reset_subsystems() {
 		(subsystem[i]).reset();
 }
 
+void  cellPacking2D::delete_subsystems() {
+	delete[] subsystem;
+	subsystem = nullptr;
+}
 // active brownian simulation
-void cellPacking2D::paralell_activityCOM_brownian(double T, double v0, double Dr, double vtau, double t_scale, int frames) {
+void cellPacking2D::parallel_activityCOM_brownian(double T, double v0, double Dr, double vtau, double t_scale, int frames) {
 
 	omp_set_num_threads(N_systems.at(0) * N_systems.at(1));
 #pragma omp parallel
@@ -80,8 +97,21 @@ void cellPacking2D::paralell_activityCOM_brownian(double T, double v0, double Dr
 }
 
 
+double cellPacking2D::max_length() {
+	double max_length = 0;
+	double length = 0;
+
+	for (int ci = 0; ci < NCELLS; ci++) {
+		length = cell(ci).max_length();
+		if (length > max_length)
+			max_length = length;
+	}
+
+	return max_length;
+}
+
 // compress isotropically to fixed packing fraction
-void cellPacking2D::paralell_qsIsoCompression(double phiTarget, double deltaPhi, double Ftol) {
+void cellPacking2D::parallel_qsIsoCompression(double phiTarget, double deltaPhi, double Ftol) {
 	// local variables
 	double phi0, phiNew, dphi, Fcheck, Kcheck;
 	int NSTEPS, k;
@@ -128,7 +158,7 @@ void cellPacking2D::paralell_qsIsoCompression(double phiTarget, double deltaPhi,
 
 		// relax shapes (energies calculated in relax function)
 
-		paralell_fireMinimizeF(Ftol, Fcheck, Kcheck);
+		parallel_fireMinimizeF(Ftol, Fcheck, Kcheck);
 		if (k % 10 == 0) {
 			printJammedConfig_yc();
 			printCalA();
@@ -145,7 +175,7 @@ void cellPacking2D::paralell_qsIsoCompression(double phiTarget, double deltaPhi,
 		phi = packingFraction();
 
 		// relax shapes (energies calculated in relax function)
-		paralell_fireMinimizeF(Ftol, Fcheck, Kcheck);
+		parallel_fireMinimizeF(Ftol, Fcheck, Kcheck);
 
 	}
 
@@ -153,7 +183,7 @@ void cellPacking2D::paralell_qsIsoCompression(double phiTarget, double deltaPhi,
 
 
 // FIRE 2.0 force minimization with backstepping
-void cellPacking2D::paralell_fireMinimizeF(double Ftol, double& Fcheck, double& Kcheck) {
+void cellPacking2D::parallel_fireMinimizeF(double Ftol, double& Fcheck, double& Kcheck) {
 	// HARD CODE IN FIRE PARAMETERS
 	const double alpha0 = 0.3;
 	const double finc = 1.1;
@@ -207,7 +237,7 @@ void cellPacking2D::paralell_fireMinimizeF(double Ftol, double& Fcheck, double& 
 	}
 }
 
-void cellPacking2D::paralell_findJamming(double dphi0, double Ftol, double Ptol) {
+void cellPacking2D::parallel_findJamming(double dphi0, double Ftol, double Ptol) {
 	// local variables
 	double Ptest, Ktest, Ftest;
 	int NSTEPS, k, kmax, kr, nc, nr, ci, cj;
@@ -247,7 +277,7 @@ void cellPacking2D::paralell_findJamming(double dphi0, double Ftol, double Ptol)
 
 	// initialize velocities
 	double Tinit = 1e-6;
-	initializeVelocities(Tinit);
+	//initializeVelocities(Tinit);
 
 	double P = 0.0, vstarnrm = 0.0, fstarnrm = 0.0;
 	bool converged = false;
@@ -435,6 +465,7 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 	double dt = dt0;
 
 	int NCELLS = pointer_to_system->getNCELLS();
+	int NVTOTAL = pointer_to_system->getNVTOTAL();
 
 	// system stress
 	double& sigmaXX_t = pointer_to_system->getSigmaXX();
@@ -445,11 +476,32 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 	double& Ncc_t = pointer_to_system->getNcc();
 	double& Nvv_t = pointer_to_system->getNvv();
 
+	// max length scale in the system
+	double length = pointer_to_system->max_length();
+
 	// calculate cashed fraction
 	for (d = 0; d < NDIM; d++) {
 		double spacing = L.at(d) / N_systems[d];
-		cashed_fraction.at(d) = pointer_to_system->scale_v(2) / spacing;
+		//cashed_fraction.at(d) = pointer_to_system->scale_v(cashed_length) / spacing;
+		cashed_fraction.at(d) = cashed_length * length / spacing;
+		if (cashed_fraction.at(d) > 0.99) {
+			cout << " Too much boxes for two little cells " << endl;
+			cashed_fraction.at(d) = 0.99;
+		}
 	}
+
+	calculateForces_insub();	
+#pragma omp barrier
+#pragma omp master
+	{
+		for (d = 0; d < NDIM; d++)
+			cout << "cashed fraction at " << d << " = " << cashed_fraction.at(d) << endl;
+		const double Trescale = 1e-8 * NCELLS;
+		//pointer_to_system->rescaleVelocities(Trescale);
+		Fcheck = pointer_to_system->forceRMS();
+		Kcheck = pointer_to_system->totalKineticEnergy();
+	}
+#pragma omp barrier
 
 	// iterate until system converged
 	kmax = 1e6;
@@ -464,8 +516,6 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 			P = 0.0;
 			vstarnrm = 0.0;
 			fstarnrm = 0.0;
-			Fcheck = 0.0;
-			Kcheck = 0.0;
 			sigmaXX_t = 0.0;
 			sigmaYY_t = 0.0;
 			Ncc_t = 0.0;
@@ -497,6 +547,8 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 			P += local_P;
 			vstarnrm += local_vstarnrm;
 			fstarnrm += local_fstarnrm;
+			if (k % pointer_to_system->getNPRINT() == 1)
+				print_information();
 		}
 		// only master thread
 		// get norms
@@ -507,7 +559,7 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 			fstarnrm = sqrt(fstarnrm);
 
 			// output some information to console
-			if (k % pointer_to_system->getNPRINT() == 0) {
+			if (k % pointer_to_system->getNPRINT() == 1) {
 				cout << "===================================================" << endl << endl;
 				cout << " 	FIRE MINIMIZATION, k = " << k << endl << endl;
 				cout << "===================================================" << endl;
@@ -522,6 +574,9 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 				cout << "	* Pdir 		= " << P / (vstarnrm * fstarnrm) << endl;
 				cout << endl << endl;
 			}
+
+			Fcheck = 0.0;
+			Kcheck = 0.0;
 		}
 #pragma omp barrier
 		// Step 2. Adjust simulation based on net motion of system
@@ -580,7 +635,6 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 			}
 		}
 
-		double tmp1, tmp2;
 		// update velocities if forces are acting
 		if (fstarnrm > 0) {
 			for (ci = 0; ci < resident_cells.size(); ci++) {
@@ -651,6 +705,13 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 			sigmaYY_t += sigmaYY;
 			Ncc_t += Ncc;
 			Nvv_t += Nvv;
+		}
+#pragma omp barrier
+		// calculate force RMS
+#pragma omp master
+		{
+			Fcheck = sqrt(Fcheck) / (NDIM * NVTOTAL);
+			//Fcheck = pointer_to_system->forceRMS();
 		}
 #pragma omp barrier
 
@@ -734,7 +795,19 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 	}
 }
 
+void subspace::print_information() {
 
+	cout << "This is box " << box_id << endl;
+	cout << "resident: " << endl;
+	for (int ci = 0; ci < resident_cells.size(); ci++)
+		cout << resident_cells[ci]->get_id() << " ";
+	cout << endl;
+	cout << "cashed: " << endl;
+	for (int ci = 0; ci < cashed_cells.size(); ci++)
+		cout << cashed_cells[ci]->get_id() << " ";
+	cout << endl;
+
+}
 double subspace::forceRMS_insub() {
 	int ci, vi, d;
 	int NVTOTAL = 0;
@@ -750,7 +823,7 @@ double subspace::forceRMS_insub() {
 	}
 
 	// get force scale
-	frms = sqrt(frms) / (NDIM * NVTOTAL);
+	//frms = sqrt(frms) / (NDIM * NVTOTAL);
 
 	// return
 	return frms;
@@ -779,7 +852,9 @@ double subspace::totalKineticEnergy_insub() {
 
 // cashe cells into cashe list
 void subspace::cashe_in(vector<deformableParticles2D*>& cash_list) {
-	cashed_cells.insert(cashed_cells.end(), cash_list.begin(), cash_list.end());
+	//cashed_cells.insert(cashed_cells.end(), cash_list.begin(), cash_list.end());
+	for (int i = 0; i < cash_list.size(); i++)
+		cashed_cells.push_back(cash_list.at(i));
 };
 
 // add migrated cells
@@ -810,10 +885,6 @@ void subspace::reset() {
 // send cashe list 
 void subspace::cashe_out(int direction) {
 
-	// list indicates near boundary cells that need to be sent to neighbor boxes
-	vector<deformableParticles2D*> cash_out_list_lower;
-	vector<deformableParticles2D*> cash_out_list_upper;
-
 	// find neighbor boxes
 	int lower_index = neighbor_box(direction, -1);
 	int upper_index = neighbor_box(direction, +1);
@@ -823,15 +894,17 @@ void subspace::cashe_out(int direction) {
 	double lower_boundary = find_boundary(direction, -1);
 	double upper_boundary = find_boundary(direction, +1);
 
+	// reset list
+	cash_out_list_lower.clear();
+	cash_out_list_upper.clear();
+
 	// check if resident cells are near boundary
 	if (!resident_cells.empty()) {
 		for (int ci = 0; ci < resident_cells.size(); ci++) {
-			if (resident_cells[ci]->cpos(direction) < lower_boundary + cashed_fraction.at(direction) * spacing &&
-				resident_cells[ci]->cpos(direction) > lower_boundary)
+			if (resident_cells[ci]->cpos(direction) < lower_boundary + cashed_fraction.at(direction) * spacing)
 
 				cash_out_list_lower.push_back(resident_cells[ci]);
-			else if (resident_cells[ci]->cpos(direction) > upper_boundary - cashed_fraction.at(direction) * spacing &&
-				resident_cells[ci]->cpos(direction) < upper_boundary)
+			else if (resident_cells[ci]->cpos(direction) > upper_boundary - cashed_fraction.at(direction) * spacing)
 
 				cash_out_list_upper.push_back(resident_cells[ci]);
 		}
@@ -841,7 +914,7 @@ void subspace::cashe_out(int direction) {
 	if (!cashed_cells.empty() && direction == 1) {
 		for (int ci = 0; ci < cashed_cells.size(); ci++) {
 			if (cashed_cells[ci]->cpos(direction) < lower_boundary + cashed_fraction.at(direction) * spacing &&
-				cashed_cells[ci]->cpos(direction) > lower_boundary)
+				cashed_cells[ci]->cpos(direction) >= lower_boundary)
 
 				cash_out_list_lower.push_back(cashed_cells[ci]);
 			else if (cashed_cells[ci]->cpos(direction) > upper_boundary - cashed_fraction.at(direction) * spacing &&
@@ -854,6 +927,8 @@ void subspace::cashe_out(int direction) {
 
 	// send to other boxes
 	pointer_to_system->cashe_into(lower_index, cash_out_list_lower);
+	// seems to have some wired bugs here. This line sometimes is not excuted. Change cash_out_list_upper
+	// to a member of class seems to solve the problem. I also switched insert method to push_back in loop
 	pointer_to_system->cashe_into(upper_index, cash_out_list_upper);
 
 };
@@ -1060,11 +1135,26 @@ void subspace::activityCOM_brownian_insub(double T, double v0, double Dr, double
 	// Scale velocity by avg cell radius
 	double scaled_v = pointer_to_system->scale_v(v0);
 
+	// max length scale in the system
+	double length = pointer_to_system->max_length();
+
 	// calculate cashed fraction
 	for (d = 0; d < NDIM; d++) {
 		double spacing = L.at(d) / N_systems[d];
-		cashed_fraction.at(d) = pointer_to_system->scale_v(2) / spacing;
+		//cashed_fraction.at(d) = pointer_to_system->scale_v(cashed_length) / spacing;
+		cashed_fraction.at(d) = cashed_length * length / spacing;
+		if (cashed_fraction.at(d) > 0.99) {
+			cout << " Too much boxes for two little cells " << endl;
+			cashed_fraction.at(d) = 0.99;
+		}
 	}
+
+#pragma omp master
+	{
+		for (d = 0; d < NDIM; d++)
+			cout << "cashed fraction at " << d << " = " << cashed_fraction.at(d) << endl;
+	}
+
 	// Reset velocity
 	if (!resident_cells.empty()) {
 		for (ci = 0; ci < resident_cells.size(); ci++) {
@@ -1149,6 +1239,7 @@ void subspace::activityCOM_brownian_insub(double T, double v0, double Dr, double
 				pointer_to_system->printCalA();
 				//pointer_to_system->printContact();
 				pointer_to_system->printV();
+				cout << "t = " << t << endl;
 			}
 		}
 
@@ -1207,3 +1298,18 @@ void subspace::conserve_momentum() {
 	}
 
 }
+
+double subspace::max_length() {
+	double max_length = 0;
+	double length = 0;
+
+	for (int ci = 0; ci < resident_cells.size(); ci++) {
+		length = resident_cells[ci]->max_length();
+		if (length > max_length)
+			max_length = length;
+	}
+
+	return max_length;
+}
+
+

@@ -2491,3 +2491,19 @@ double deformableParticles2D::momentum(int d) {
 
 	return momentum;
 }
+
+double deformableParticles2D::max_length() {
+	double max_length = 0;
+	double length = 0;
+
+	for (int i = 0; i < NV; i++) {
+		length = 0;
+		for (int d = 0; d < NDIM; d++) {
+			length += pow(vrel(i, d), 2);
+		}
+		if (length > max_length)
+			max_length = length;
+	}
+
+	return sqrt(max_length);
+}
