@@ -491,7 +491,7 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 	for (d = 0; d < NDIM; d++) {
 		double spacing = L.at(d) / N_systems[d];
 		//cashed_fraction.at(d) = pointer_to_system->scale_v(cashed_length) / spacing;
-		cashed_fraction.at(d) = 4 * length / spacing;
+		cashed_fraction.at(d) = cashed_length * length / spacing;
 		if (cashed_fraction.at(d) > 0.99) {
 			cout << " Too much boxes for two little cells " << endl;
 			cashed_fraction.at(d) = 0.99;
@@ -889,10 +889,6 @@ void subspace::reset() {
 // send cashe list 
 void subspace::cashe_out(int direction) {
 
-	// list indicates near boundary cells that need to be sent to neighbor boxes
-	vector<deformableParticles2D*> cash_out_list_lower;
-	vector<deformableParticles2D*> cash_out_list_upper;
-
 	// find neighbor boxes
 	int lower_index = neighbor_box(direction, -1);
 	int upper_index = neighbor_box(direction, +1);
@@ -901,6 +897,10 @@ void subspace::cashe_out(int direction) {
 	// find boundaries of the current box
 	double lower_boundary = find_boundary(direction, -1);
 	double upper_boundary = find_boundary(direction, +1);
+
+	// reset list
+	cash_out_list_lower.clear();
+	cash_out_list_upper.clear();
 
 	// check if resident cells are near boundary
 	if (!resident_cells.empty()) {
@@ -1144,7 +1144,7 @@ void subspace::activityCOM_brownian_insub(double T, double v0, double Dr, double
 	for (d = 0; d < NDIM; d++) {
 		double spacing = L.at(d) / N_systems[d];
 		//cashed_fraction.at(d) = pointer_to_system->scale_v(cashed_length) / spacing;
-		cashed_fraction.at(d) = 4 * length / spacing;
+		cashed_fraction.at(d) = cashed_length * length / spacing;
 		if (cashed_fraction.at(d) > 0.99) {
 			cout << " Too much boxes for two little cells " << endl;
 			cashed_fraction.at(d) = 0.99;

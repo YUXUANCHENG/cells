@@ -24,6 +24,9 @@ protected:
 	vector<deformableParticles2D*> resident_cells;
 	vector<deformableParticles2D*> cashed_cells;
 
+	// list indicates near boundary cells that need to be sent to neighbor boxes
+	vector<deformableParticles2D*> cash_out_list_lower;
+	vector<deformableParticles2D*> cash_out_list_upper;
 
 	// pointer to the whole system (cell_group)
 	cellPacking2D* pointer_to_system;
@@ -47,7 +50,7 @@ protected:
 
 	// indicate what fraction of the system size will be cashed
 	vector<double> cashed_fraction{ 0.1, 0.1 };
-	double cashed_length = 2.5;
+	double cashed_length = 2;
 
 public:
 

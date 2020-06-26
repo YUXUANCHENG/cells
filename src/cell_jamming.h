@@ -62,8 +62,8 @@ private:
 	double Ktolerance = 1e-16;
 	string extend;
 
-	int sub_num_x = 4;
-	int sub_num_y = 4;
+	int sub_num_x = 3;
+	int sub_num_y = 3;
 
 public:
 
