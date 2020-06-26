@@ -63,7 +63,7 @@ private:
 	string extend;
 
 	int sub_num_x = 4;
-	int sub_num_y = 5;
+	int sub_num_y = 4;
 
 public:
 

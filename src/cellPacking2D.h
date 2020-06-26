@@ -412,6 +412,8 @@ public:
 		}
 		return NVTOTAL;
 	}
+
+	double max_length();
 };
 
 

@@ -237,6 +237,8 @@ public:
 	double cal_mean_v(int d);
 
 	double momentum(int d);
+	double max_length();
+
 };
 
 

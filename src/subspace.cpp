@@ -97,6 +97,19 @@ void cellPacking2D::parallel_activityCOM_brownian(double T, double v0, double Dr
 }
 
 
+double cellPacking2D::max_length() {
+	double max_length = 0;
+	double length = 0;
+
+	for (int ci = 0; ci < NCELLS; ci++) {
+		length = cell(ci).max_length();
+		if (length > max_length)
+			max_length = length;
+	}
+
+	return max_length;
+}
+
 // compress isotropically to fixed packing fraction
 void cellPacking2D::parallel_qsIsoCompression(double phiTarget, double deltaPhi, double Ftol) {
 	// local variables
@@ -471,11 +484,15 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 	double& Ncc_t = pointer_to_system->getNcc();
 	double& Nvv_t = pointer_to_system->getNvv();
 
+	// max length scale in the system
+	double length = pointer_to_system->max_length();
+
 	// calculate cashed fraction
 	for (d = 0; d < NDIM; d++) {
 		double spacing = L.at(d) / N_systems[d];
-		cashed_fraction.at(d) = pointer_to_system->scale_v(cashed_length) / spacing;
-		if (cashed_fraction.at(d) > 0.9) {
+		//cashed_fraction.at(d) = pointer_to_system->scale_v(cashed_length) / spacing;
+		cashed_fraction.at(d) = 2 * length / spacing;
+		if (cashed_fraction.at(d) > 0.99) {
 			cout << " Too much boxes for two little cells " << endl;
 			exit(1);
 		}
@@ -1110,12 +1127,15 @@ void subspace::activityCOM_brownian_insub(double T, double v0, double Dr, double
 	// Scale velocity by avg cell radius
 	double scaled_v = pointer_to_system->scale_v(v0);
 
+	// max length scale in the system
+	double length = pointer_to_system->max_length();
+
 	// calculate cashed fraction
 	for (d = 0; d < NDIM; d++) {
 		double spacing = L.at(d) / N_systems[d];
-		cashed_fraction.at(d) = pointer_to_system->scale_v(cashed_length) / spacing;
-		//cout << "cashed fraction at " << d << " = " << cashed_fraction.at(d) << endl;
-		if (cashed_fraction.at(d) > 0.9) {
+		//cashed_fraction.at(d) = pointer_to_system->scale_v(cashed_length) / spacing;
+		cashed_fraction.at(d) = 2 * length / spacing;
+		if (cashed_fraction.at(d) > 0.99) {
 			cout << " Too much boxes for two little cells " << endl;
 			exit(1);
 		}
@@ -1270,3 +1290,18 @@ void subspace::conserve_momentum() {
 	}
 
 }
+
+double subspace::max_length() {
+	double max_length = 0;
+	double length = 0;
+
+	for (int ci = 0; ci < resident_cells.size(); ci++) {
+		length = resident_cells[ci]->max_length();
+		if (length > max_length)
+			max_length = length;
+	}
+
+	return max_length;
+}
+
+

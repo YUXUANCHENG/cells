@@ -75,6 +75,7 @@ public:
 	void fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, double& P, double& vstarnrm, double& fstarnrm, bool& converged);
 	double forceRMS_insub();
 	double totalKineticEnergy_insub();
+	double max_length();
 
 };
 
