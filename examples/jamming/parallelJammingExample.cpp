@@ -82,7 +82,7 @@ int main()
 	// compress to set packing fraction using FIRE, pressure relaxation
 	cout << "	** jamming protocol with Ftol = " << Ftol << ", Ptol = " << Ptol << endl;
 	packingObject.initialize_subsystems(3, 3);
-	packingObject.paralell_findJamming(deltaPhi0, Ftol, Ptol);
+	packingObject.parallel_findJamming(deltaPhi0, Ftol, Ptol);
 
 
 	//cout << "	** computing VDOS, printing to " << vdosFile << endl;
