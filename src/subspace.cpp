@@ -905,10 +905,12 @@ void subspace::cashe_out(int direction) {
 	// check if cashed cells are near boundary, but only for y direction
 	if (!cashed_cells.empty() && direction == 1) {
 		for (int ci = 0; ci < cashed_cells.size(); ci++) {
-			if (cashed_cells[ci]->cpos(direction) < lower_boundary + cashed_fraction.at(direction) * spacing)
+			if (cashed_cells[ci]->cpos(direction) < lower_boundary + cashed_fraction.at(direction) * spacing &&
+				cashed_cells[ci]->cpos(direction) >= lower_boundary)
 
 				cash_out_list_lower.push_back(cashed_cells[ci]);
-			else if (cashed_cells[ci]->cpos(direction) > upper_boundary - cashed_fraction.at(direction) * spacing)
+			else if (cashed_cells[ci]->cpos(direction) > upper_boundary - cashed_fraction.at(direction) * spacing &&
+				cashed_cells[ci]->cpos(direction) < upper_boundary)
 
 				cash_out_list_upper.push_back(cashed_cells[ci]);
 		}
