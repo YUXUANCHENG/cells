@@ -76,6 +76,7 @@ public:
 	double forceRMS_insub();
 	double totalKineticEnergy_insub();
 	double max_length();
+	void print_information();
 
 };
 

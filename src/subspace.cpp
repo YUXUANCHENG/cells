@@ -491,7 +491,7 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 	for (d = 0; d < NDIM; d++) {
 		double spacing = L.at(d) / N_systems[d];
 		//cashed_fraction.at(d) = pointer_to_system->scale_v(cashed_length) / spacing;
-		cashed_fraction.at(d) = 2.2 * length / spacing;
+		cashed_fraction.at(d) = 2 * length / spacing;
 		if (cashed_fraction.at(d) > 0.99) {
 			cout << " Too much boxes for two little cells " << endl;
 			exit(1);
@@ -555,6 +555,8 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 			P += local_P;
 			vstarnrm += local_vstarnrm;
 			fstarnrm += local_fstarnrm;
+			if (dt < 1e-7)
+				print_information();
 		}
 		// only master thread
 		// get norms
@@ -801,7 +803,17 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 	}
 }
 
+void subspace::print_information() {
 
+	cout << "This is box " << box_id << endl;
+	cout << "resident: " << endl;
+	for (int ci = 0; ci < resident_cells.size(); ci++)
+		cout << resident_cells[ci]->get_id() << endl;
+	cout << "cashed: " << endl;
+	for (int ci = 0; ci < cashed_cells.size(); ci++)
+		cout << cashed_cells[ci]->get_id() << endl;
+
+}
 double subspace::forceRMS_insub() {
 	int ci, vi, d;
 	int NVTOTAL = 0;
@@ -1132,7 +1144,7 @@ void subspace::activityCOM_brownian_insub(double T, double v0, double Dr, double
 	for (d = 0; d < NDIM; d++) {
 		double spacing = L.at(d) / N_systems[d];
 		//cashed_fraction.at(d) = pointer_to_system->scale_v(cashed_length) / spacing;
-		cashed_fraction.at(d) = 2.2 * length / spacing;
+		cashed_fraction.at(d) = 2* length / spacing;
 		if (cashed_fraction.at(d) > 0.99) {
 			cout << " Too much boxes for two little cells " << endl;
 			exit(1);
