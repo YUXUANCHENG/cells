@@ -555,7 +555,7 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 			P += local_P;
 			vstarnrm += local_vstarnrm;
 			fstarnrm += local_fstarnrm;
-			if (dt < 1e-7 && k % pointer_to_system->getNPRINT() == 1)
+			if (k % pointer_to_system->getNPRINT() == 1)
 				print_information();
 		}
 		// only master thread
@@ -808,10 +808,12 @@ void subspace::print_information() {
 	cout << "This is box " << box_id << endl;
 	cout << "resident: " << endl;
 	for (int ci = 0; ci < resident_cells.size(); ci++)
-		cout << resident_cells[ci]->get_id() << endl;
+		cout << resident_cells[ci]->get_id() << " ";
+	cout << endl;
 	cout << "cashed: " << endl;
 	for (int ci = 0; ci < cashed_cells.size(); ci++)
-		cout << cashed_cells[ci]->get_id() << endl;
+		cout << cashed_cells[ci]->get_id() << " ";
+	cout << endl;
 
 }
 double subspace::forceRMS_insub() {
@@ -933,6 +935,8 @@ void subspace::cashe_out(int direction) {
 
 	// send to other boxes
 	pointer_to_system->cashe_into(lower_index, cash_out_list_lower);
+	// seems to have some wired bugs here. This line sometimes is not excuted. Change cash_out_list_upper
+	// to a member of class seems to solve the problem. I also switched insert method to push_back in loop
 	pointer_to_system->cashe_into(upper_index, cash_out_list_upper);
 
 };
