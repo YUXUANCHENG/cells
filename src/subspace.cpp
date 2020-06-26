@@ -494,7 +494,7 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 		cashed_fraction.at(d) = 2 * length / spacing;
 		if (cashed_fraction.at(d) > 0.99) {
 			cout << " Too much boxes for two little cells " << endl;
-			exit(1);
+			cashed_fraction.at(d) = 0.99;
 		}
 	}
 
@@ -1147,7 +1147,7 @@ void subspace::activityCOM_brownian_insub(double T, double v0, double Dr, double
 		cashed_fraction.at(d) = 2* length / spacing;
 		if (cashed_fraction.at(d) > 0.99) {
 			cout << " Too much boxes for two little cells " << endl;
-			exit(1);
+			cashed_fraction.at(d) = 0.99;
 		}
 	}
 
