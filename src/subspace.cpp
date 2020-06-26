@@ -893,12 +893,10 @@ void subspace::cashe_out(int direction) {
 	// check if resident cells are near boundary
 	if (!resident_cells.empty()) {
 		for (int ci = 0; ci < resident_cells.size(); ci++) {
-			if (resident_cells[ci]->cpos(direction) < lower_boundary + cashed_fraction.at(direction) * spacing &&
-				resident_cells[ci]->cpos(direction) > lower_boundary)
+			if (resident_cells[ci]->cpos(direction) < lower_boundary + cashed_fraction.at(direction) * spacing)
 
 				cash_out_list_lower.push_back(resident_cells[ci]);
-			else if (resident_cells[ci]->cpos(direction) > upper_boundary - cashed_fraction.at(direction) * spacing &&
-				resident_cells[ci]->cpos(direction) < upper_boundary)
+			else if (resident_cells[ci]->cpos(direction) > upper_boundary - cashed_fraction.at(direction) * spacing)
 
 				cash_out_list_upper.push_back(resident_cells[ci]);
 		}
@@ -907,12 +905,10 @@ void subspace::cashe_out(int direction) {
 	// check if cashed cells are near boundary, but only for y direction
 	if (!cashed_cells.empty() && direction == 1) {
 		for (int ci = 0; ci < cashed_cells.size(); ci++) {
-			if (cashed_cells[ci]->cpos(direction) < lower_boundary + cashed_fraction.at(direction) * spacing &&
-				cashed_cells[ci]->cpos(direction) > lower_boundary)
+			if (cashed_cells[ci]->cpos(direction) < lower_boundary + cashed_fraction.at(direction) * spacing)
 
 				cash_out_list_lower.push_back(cashed_cells[ci]);
-			else if (cashed_cells[ci]->cpos(direction) > upper_boundary - cashed_fraction.at(direction) * spacing &&
-				cashed_cells[ci]->cpos(direction) < upper_boundary)
+			else if (cashed_cells[ci]->cpos(direction) > upper_boundary - cashed_fraction.at(direction) * spacing)
 
 				cash_out_list_upper.push_back(cashed_cells[ci]);
 		}
