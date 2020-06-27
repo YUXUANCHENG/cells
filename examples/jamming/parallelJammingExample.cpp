@@ -81,6 +81,8 @@ int main()
 
 	// compress to set packing fraction using FIRE, pressure relaxation
 	cout << "	** jamming protocol with Ftol = " << Ftol << ", Ptol = " << Ptol << endl;
+
+	// split system into 3x3 boxes
 	packingObject.initialize_subsystems(3, 3);
 	packingObject.parallel_findJamming(deltaPhi0, Ftol, Ptol);
 

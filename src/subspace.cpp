@@ -22,6 +22,7 @@ void cellPacking2D::split_into_subspace() {
 	for (int ci = 0; ci < NCELLS; ci++) {
 		box = look_for_new_box(cell(ci));
 		migrate_into(box, &(cell(ci)));
+		cell(ci).set_id(ci);
 	}
 };
 
