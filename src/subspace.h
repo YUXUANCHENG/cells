@@ -40,13 +40,18 @@ protected:
 	int NDIM = 2;
 	double Ncc = 0, Nvv = 0;
 
-
+	// stress
 	double sigmaXX = 0.0;
 	double sigmaXY = 0.0;
 	double sigmaYX = 0.0;
 	double sigmaYY = 0.0;
+
+	// MD time 
 	double dt0;
 	double PI = 4 * atan(1);
+
+	// Update frequency
+	int update_freqency = 100;
 
 	// indicate what fraction of the system size will be cashed
 	vector<double> cashed_fraction{ 0.1, 0.1 };

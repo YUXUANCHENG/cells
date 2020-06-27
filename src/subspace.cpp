@@ -10,7 +10,7 @@ using namespace std;
 void cellPacking2D::split_into_subspace() {
 	int box;
 	// create N[0] * N[1] subsystems
-	if(subsystem == nullptr)
+	if (subsystem == nullptr)
 		subsystem = new subspace[N_systems[0] * N_systems[1]];
 
 	// initialize subsystems
@@ -22,6 +22,7 @@ void cellPacking2D::split_into_subspace() {
 	for (int ci = 0; ci < NCELLS; ci++) {
 		box = look_for_new_box(cell(ci));
 		migrate_into(box, &(cell(ci)));
+		cell(ci).set_id(ci);
 	}
 };
 
@@ -59,7 +60,7 @@ int cellPacking2D::look_for_new_box(deformableParticles2D& cell) {
 void cellPacking2D::initialize_subsystems(int N_x, int N_y) {
 
 	// set how many boxes along each direction
-	if(N_systems.size() < 2)
+	if (N_systems.size() < 2)
 	{
 		N_systems.push_back(N_x);
 		N_systems.push_back(N_y);
@@ -498,7 +499,7 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 		}
 	}
 
-	calculateForces_insub();	
+	calculateForces_insub();
 #pragma omp barrier
 #pragma omp master
 	{
@@ -661,30 +662,32 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 			resident_cells[ci]->updateCPos();
 		}
 
-		// perform cashing and migration
 #pragma omp barrier
+		if (k % update_freqency == 0) {
+// perform cashing and migration
 // To avoid deadlock, migrate sequencially
 #pragma omp critical
-		{
-			migrate_out();
-		}
+			{
+				migrate_out();
+			}
 
 #pragma omp barrier
 #pragma omp critical
-		{
-			reset_cashe();
-		}
-		// sent cashe to neighbors in x direction
+			{
+				reset_cashe();
+			}
+			// sent cashe to neighbors in x direction
 #pragma omp barrier
 #pragma omp critical
-		{
-			cashe_out(0);
-		}
-		// sent cashe to neighbors in y direction
+			{
+				cashe_out(0);
+			}
+			// sent cashe to neighbors in y direction
 #pragma omp barrier
 #pragma omp critical
-		{
-			cashe_out(1);
+			{
+				cashe_out(1);
+			}
 		}
 #pragma omp barrier
 
@@ -1208,29 +1211,31 @@ void subspace::activityCOM_brownian_insub(double T, double v0, double Dr, double
 	*/
 
 #pragma omp barrier
-	// To avoid deadlock, migrate sequencially
+		if (count % update_freqency == 0) {
+			// To avoid deadlock, migrate sequencially
 #pragma omp critical
-		{
-			migrate_out();
-		}
+			{
+				migrate_out();
+			}
 
 #pragma omp barrier
-		// reset cashe
+			// reset cashe
 #pragma omp critical
-		{
-			reset_cashe();
-		}
+			{
+				reset_cashe();
+			}
 #pragma omp barrier
-		// sent cashe to neighbors in x direction
+			// sent cashe to neighbors in x direction
 #pragma omp critical
-		{
-			cashe_out(0);
-		}
+			{
+				cashe_out(0);
+			}
 #pragma omp barrier
-		// sent cashe to neighbors in y direction
+			// sent cashe to neighbors in y direction
 #pragma omp critical
-		{
-			cashe_out(1);
+			{
+				cashe_out(1);
+			}
 		}
 #pragma omp barrier
 
