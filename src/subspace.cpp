@@ -852,9 +852,9 @@ double subspace::totalKineticEnergy_insub() {
 
 // cashe cells into cashe list
 void subspace::cashe_in(vector<deformableParticles2D*>& cash_list) {
-	//cashed_cells.insert(cashed_cells.end(), cash_list.begin(), cash_list.end());
-	for (int i = 0; i < cash_list.size(); i++)
-		cashed_cells.push_back(cash_list.at(i));
+	cashed_cells.insert(cashed_cells.end(), cash_list.begin(), cash_list.end());
+	//for (int i = 0; i < cash_list.size(); i++)
+	//	cashed_cells.push_back(cash_list.at(i));
 };
 
 // add migrated cells
@@ -904,7 +904,7 @@ void subspace::cashe_out(int direction) {
 			if (resident_cells[ci]->cpos(direction) < lower_boundary + cashed_fraction.at(direction) * spacing)
 
 				cash_out_list_lower.push_back(resident_cells[ci]);
-			else if (resident_cells[ci]->cpos(direction) > upper_boundary - cashed_fraction.at(direction) * spacing)
+			if (resident_cells[ci]->cpos(direction) > upper_boundary - cashed_fraction.at(direction) * spacing)
 
 				cash_out_list_upper.push_back(resident_cells[ci]);
 		}
@@ -917,7 +917,7 @@ void subspace::cashe_out(int direction) {
 				cashed_cells[ci]->cpos(direction) >= lower_boundary)
 
 				cash_out_list_lower.push_back(cashed_cells[ci]);
-			else if (cashed_cells[ci]->cpos(direction) > upper_boundary - cashed_fraction.at(direction) * spacing &&
+			if (cashed_cells[ci]->cpos(direction) > upper_boundary - cashed_fraction.at(direction) * spacing &&
 				cashed_cells[ci]->cpos(direction) < upper_boundary)
 
 				cash_out_list_upper.push_back(cashed_cells[ci]);
@@ -927,8 +927,6 @@ void subspace::cashe_out(int direction) {
 
 	// send to other boxes
 	pointer_to_system->cashe_into(lower_index, cash_out_list_lower);
-	// seems to have some wired bugs here. This line sometimes is not excuted. Change cash_out_list_upper
-	// to a member of class seems to solve the problem. I also switched insert method to push_back in loop
 	pointer_to_system->cashe_into(upper_index, cash_out_list_upper);
 
 };
