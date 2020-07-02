@@ -51,7 +51,8 @@ protected:
 	double PI = 4 * atan(1);
 
 	// Update frequency
-	int update_freqency = 100;
+	// seems like cashe frequency won't affect speed too much
+	int update_freqency = 10;
 
 	// indicate what fraction of the system size will be cashed
 	vector<double> cashed_fraction{ 0.1, 0.1 };

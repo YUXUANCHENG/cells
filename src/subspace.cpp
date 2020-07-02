@@ -1270,7 +1270,14 @@ void subspace::activityCOM_brownian_insub(double T, double v0, double Dr, double
 		count++;
 
 		// Reset COM velocity
-		conserve_momentum();
+		// Might cause some problem if only conserve momentum in subsystems
+		//conserve_momentum();
+#pragma omp barrier
+#pragma omp master
+		{
+			pointer_to_system->conserve_momentum();
+		}
+#pragma omp barrier
 	}
 
 
