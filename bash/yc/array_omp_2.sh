@@ -20,7 +20,7 @@ taskf=$workdir/task.txt
 let range=$jobnumber-1
 for index_i in `seq 0 $range`; do
     for index_j in `seq 0 $range`; do
-        current=$workdir/$index_i/
+        current=$workdir/"$index_i"_"$index_j"/
         runString="mkdir -p $current;cd $current;$binf $index_i $index_j;"
         echo "$runString" >> $taskf
     done
