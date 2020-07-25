@@ -1131,7 +1131,7 @@ public:
 		v0PrintObject.open("v0.txt");
 
 		// system size
-		int NCELLS = 64;
+		int NCELLS = 16;
 		int NV = 16;
 		int seed = 5;
 		double Lini = 1.0;
