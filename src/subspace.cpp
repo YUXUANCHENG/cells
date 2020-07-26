@@ -3,6 +3,7 @@
 #include "cellPacking2D.h"
 #include "random"
 #include <cmath>
+#include <omp.h>
 
 using namespace std;
 
