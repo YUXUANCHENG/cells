@@ -1127,6 +1127,8 @@ public:
 		index_i_ss >> index_i;
 		index_j_ss >> index_j;
 
+		cout << "Loop i, j = " << index_i << "," << index_j << endl;
+
 		std::ofstream v0PrintObject;
 		v0PrintObject.open("v0.txt");
 
@@ -1194,10 +1196,6 @@ public:
 
 		cellPacking2D jammed_state;
 		cell_group.saveState(jammed_state);
-
-
-
-		cout << "Loop i, j = " << index_i << "," << index_j << endl;
 
 		//v0 = 0.04;
 		double v0 = 0.002 + double(index_j) * 0.002;

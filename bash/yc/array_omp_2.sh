@@ -8,7 +8,7 @@ srcdir=$cellsdir/src
 # compile into binary using packing.h
 workdir=$(pwd)
 binf=$(pwd)/jamming.o
-jobnumber=2;
+jobnumber=10;
 # mainf=$maindir/jamming/cellJamming.cpp
 
 # run compiler

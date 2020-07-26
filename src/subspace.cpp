@@ -133,7 +133,7 @@ void cellPacking2D::parallel_qsIsoCompression(double phiTarget, double deltaPhi,
 	k = 0;
 
 	// loop until phi is the correct value
-	while (k < NSTEPS) {
+	while (k < NSTEPS || phi < phiTarget) {
 		// update iterator
 		k++;
 
@@ -166,20 +166,6 @@ void cellPacking2D::parallel_qsIsoCompression(double phiTarget, double deltaPhi,
 			printContact();
 		}
 	}
-
-	while (phi < phiTarget) {
-
-		phiNew = phi + deltaPhi;
-		setPackingFraction(phiNew);
-
-		// calculate phi before minimization
-		phi = packingFraction();
-
-		// relax shapes (energies calculated in relax function)
-		parallel_fireMinimizeF(Ftol, Fcheck, Kcheck);
-
-	}
-
 }
 
 
@@ -444,6 +430,27 @@ void cellPacking2D::parallel_findJamming(double dphi0, double Ftol, double Ptol)
 	}
 }
 
+void subspace::cal_cashed_fraction(){
+
+	// max length scale in the system
+	double length = pointer_to_system->max_length();
+
+	// calculate cashed fraction
+	for (int d = 0; d < NDIM; d++) {
+		double spacing = L.at(d) / N_systems[d];
+		//cashed_fraction.at(d) = pointer_to_system->scale_v(cashed_length) / spacing;
+		cashed_fraction.at(d) = cashed_length * length / spacing;
+		if (N_systems[d] ==2 && cashed_fraction.at(d) > 0.499) {
+			cout << " Too much boxes for two little cells " << endl;
+			cashed_fraction.at(d) = 0.499;
+		}
+		if (cashed_fraction.at(d) > 0.999) {
+			cout << " Too much boxes for two little cells " << endl;
+			cashed_fraction.at(d) = 0.999;
+		}
+	}
+
+}
 
 // FIRE 2.0 force minimization with backstepping
 void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, double& P, double& vstarnrm, double& fstarnrm, bool& converged) {
@@ -485,19 +492,7 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 	double& Ncc_t = pointer_to_system->getNcc();
 	double& Nvv_t = pointer_to_system->getNvv();
 
-	// max length scale in the system
-	double length = pointer_to_system->max_length();
-
-	// calculate cashed fraction
-	for (d = 0; d < NDIM; d++) {
-		double spacing = L.at(d) / N_systems[d];
-		//cashed_fraction.at(d) = pointer_to_system->scale_v(cashed_length) / spacing;
-		cashed_fraction.at(d) = cashed_length * length / spacing;
-		if (cashed_fraction.at(d) > 0.99) {
-			cout << " Too much boxes for two little cells " << endl;
-			cashed_fraction.at(d) = 0.99;
-		}
-	}
+	cal_cashed_fraction();
 
 	calculateForces_insub();
 #pragma omp barrier
@@ -556,8 +551,10 @@ void subspace::fireMinimizeF_insub(double Ftol, double& Fcheck, double& Kcheck, 
 			P += local_P;
 			vstarnrm += local_vstarnrm;
 			fstarnrm += local_fstarnrm;
-			if (k % pointer_to_system->getNPRINT() == 1)
+			if (k % pointer_to_system->getNPRINT() == 1){
 				print_information();
+				cal_cashed_fraction();
+			}
 		}
 		// only master thread
 		// get norms
