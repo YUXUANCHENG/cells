@@ -86,6 +86,7 @@ public:
 	double totalKineticEnergy_insub();
 	double max_length();
 	void print_information();
+	void cal_cashed_fraction();
 
 };
 
