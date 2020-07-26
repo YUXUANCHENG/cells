@@ -8,7 +8,7 @@
             "name": "g++ - Build and debug active file",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${fileDirname}/jamming.o",
+            "program": "${workspaceFolder}/jamming.o",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
