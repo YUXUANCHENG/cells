@@ -1146,15 +1146,7 @@ void subspace::activityCOM_brownian_insub(double T, double v0, double Dr, double
 	double length = pointer_to_system->max_length();
 
 	// calculate cashed fraction
-	for (d = 0; d < NDIM; d++) {
-		double spacing = L.at(d) / N_systems[d];
-		//cashed_fraction.at(d) = pointer_to_system->scale_v(cashed_length) / spacing;
-		cashed_fraction.at(d) = cashed_length * length / spacing;
-		if (cashed_fraction.at(d) > 0.99) {
-			cout << " Too much boxes for two little cells " << endl;
-			cashed_fraction.at(d) = 0.99;
-		}
-	}
+	cal_cashed_fraction();
 
 #pragma omp master
 	{
