@@ -1143,9 +1143,6 @@ void subspace::activityCOM_brownian_insub(double T, double v0, double Dr, double
 	// Scale velocity by avg cell radius
 	double scaled_v = pointer_to_system->scale_v(v0);
 
-	// max length scale in the system
-	double length = pointer_to_system->max_length();
-
 	// calculate cashed fraction
 	cal_cashed_fraction();
 
