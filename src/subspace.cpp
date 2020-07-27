@@ -441,9 +441,10 @@ void subspace::cal_cashed_fraction(){
 		double spacing = L.at(d) / N_systems[d];
 		//cashed_fraction.at(d) = pointer_to_system->scale_v(cashed_length) / spacing;
 		cashed_fraction.at(d) = cashed_length * length / spacing;
-		if (N_systems[d] ==2 && cashed_fraction.at(d) > 0.499) {
+		if (N_systems[d] ==2 && cashed_fraction.at(d) > 0.5) {
 			cout << " Too much boxes for two little cells " << endl;
-			cashed_fraction.at(d) = 0.499;
+			// has to be exactly 0.5, otherwise there could be problem of untracked bonds
+			cashed_fraction.at(d) = 0.5;
 		}
 		if (cashed_fraction.at(d) > 0.999) {
 			cout << " Too much boxes for two little cells " << endl;
