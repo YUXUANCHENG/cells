@@ -16,6 +16,7 @@ rm -f $binf
 g++ --std=c++11 -fopenmp -I $srcdir $srcdir/*.cpp -o $binf 
 
 taskf=$workdir/task.txt
+rm -f $taskf
 
 let range=$jobnumber-1
 for index_i in `seq 0 $range`; do
@@ -27,6 +28,8 @@ for index_i in `seq 0 $range`; do
 done
 
 slurmf=$workdir/slurm.sh
+rm -f $slurmf
+
 partition=pi_ohern
 job_name=DPM
 let total_job=$jobnumber*$jobnumber
