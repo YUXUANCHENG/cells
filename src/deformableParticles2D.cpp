@@ -1106,6 +1106,9 @@ double deformableParticles2D::segmentCosine(int vi){
 		dp += ui*uim1;
 	}
 
+	if (dp != dp){
+		cout << li << " " << lim1 << endl;
+	}
 	// return normalized dot product
 	return dp;
 }

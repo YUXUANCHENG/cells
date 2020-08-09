@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/jamming.o",
-            "args": ["2","2"],
+            "args": ["8","6"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],

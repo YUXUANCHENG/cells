@@ -444,11 +444,11 @@ void subspace::cal_cashed_fraction(){
 		if (N_systems[d] ==2 && cashed_fraction.at(d) > 0.5) {
 			cout << " Too much boxes for two little cells " << endl;
 			// has to be exactly 0.5, otherwise there could be problem of untracked bonds
-			cashed_fraction.at(d) = 0.5;
+			cashed_fraction.at(d) = 0.5 - 1e-8;
 		}
-		if (cashed_fraction.at(d) > 0.999) {
+		if (cashed_fraction.at(d) > 1) {
 			cout << " Too much boxes for two little cells " << endl;
-			cashed_fraction.at(d) = 0.999;
+			cashed_fraction.at(d) = 1 - 1e-8;
 		}
 	}
 
@@ -924,7 +924,7 @@ void subspace::cashe_out(int direction) {
 	if (!cashed_cells.empty() && direction == 1) {
 		for (int ci = 0; ci < cashed_cells.size(); ci++) {
 			if (cashed_cells[ci]->cpos(direction) < lower_boundary + cashed_fraction.at(direction) * spacing &&
-				cashed_cells[ci]->cpos(direction) >= lower_boundary)
+				cashed_cells[ci]->cpos(direction) > lower_boundary)
 
 				cash_out_list_lower.push_back(cashed_cells[ci]);
 			if (cashed_cells[ci]->cpos(direction) > upper_boundary - cashed_fraction.at(direction) * spacing &&
@@ -1081,6 +1081,11 @@ void subspace::calculateForces_insub() {
 			// forces between resident cells
 			// loop over pairs, add info to contact matrix
 			for (cj = ci + 1; cj < resident_cells.size(); cj++) {
+				if (resident_cells[ci]->get_id() == resident_cells[cj]->get_id()){
+					cout << "incorrect resident list" << endl;
+					print_information();
+					continue;
+				}
 				// calculate forces, add to number of vertex-vertex contacts
 				inContact = resident_cells[ci]->vertexForce(*resident_cells[cj], sigmaXX, sigmaXY, sigmaYX, sigmaYY);
 				if (inContact > 0) {
@@ -1097,6 +1102,11 @@ void subspace::calculateForces_insub() {
 			if (!cashed_cells.empty()) {
 				// forces between resident cell and cashed cell
 				for (ck = 0; ck < cashed_cells.size(); ck++) {
+					if (resident_cells[ci]->get_id() == cashed_cells[ck]->get_id()){
+						cout << "incorrect cashed list" << endl;
+						print_information();
+						continue;
+					}
 					// notice that stress between resident and cashed cells are double counted
 					inContact = resident_cells[ci]->vertexForce_cashed(*cashed_cells[ck], sigmaXX, sigmaXY, sigmaYX, sigmaYY);
 					if (inContact > 0) {
