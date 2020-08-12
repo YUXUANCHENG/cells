@@ -19,8 +19,8 @@ taskf=$workdir/task.txt
 rm -f $taskf
 
 let range=$jobnumber-1
-for index_i in `seq 0 $range`; do
-    for index_j in `seq 0 $range`; do
+for index_i in 5; do
+    for index_j in {0,9}; do
         current=$workdir/"$index_i"_"$index_j"/
         runString="mkdir -p $current;cd $current;$binf $index_i $index_j;"
         echo "$runString" >> $taskf
@@ -36,9 +36,9 @@ let total_job=$jobnumber*$jobnumber
 
 echo -- PRINTING SLURM FILE...
 echo \#\!/bin/bash >> $slurmf
-echo \#SBATCH --cpus-per-task=4 >> $slurmf
+echo \#SBATCH --cpus-per-task=20 >> $slurmf
 echo \#SBATCH --mem-per-cpu=512 >> $slurmf
-echo \#SBATCH --array=1-$total_job >> $slurmf
+echo \#SBATCH --array=1-2 >> $slurmf
 echo \#SBATCH -n 1 >> $slurmf
 echo \#SBATCH -p $partition >> $slurmf
 echo \#SBATCH -J $job_name >> $slurmf
