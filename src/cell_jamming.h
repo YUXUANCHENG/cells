@@ -1148,13 +1148,15 @@ public:
 
 		Dr = 1e-2;
 		double ratio = 100.0;
-		double calA0 = 1.12;
-		double kb = 0.0001 * (index_i + 1);
+		//double calA0 = 1.12;
+		double calA0 = 1.18;
+
+		//double kb = 0.0001 * (index_i + 1);
+		double kb = 0.00005 * pow(index_i +1, 2);
 		double kl = ratio * kb;
 
 		//double phi_max = parallel_cal_phi_max(NCELLS, NV, seed, Lini, kl, kb);
-		//double phi_max = 0.94;
-		double phi_max = 0.85;
+		double phi_max = 0.94;
 
 		// output files
 		string extend = "_jammed_" + to_string(index_i) + ".txt";
@@ -1173,8 +1175,8 @@ public:
 
 		// open position output file
 		cell_group.openJamObject(jammingF, lengthscaleF, phiF, calAF, contactF, vF);
-		//phiDisk = 0.65;
-		phiDisk = 0.60;
+		phiDisk = 0.65;
+		//phiDisk = 0.60;
 		// Initialze the system as disks
 		cout << "	** Initializing at phiDisk = " << phiDisk << endl;
 		cell_group.initializeGel(NV, phiDisk, sizedev, del);
@@ -1201,7 +1203,7 @@ public:
 
 		//v0 = 0.04;
 		//double v0 = 0.002 + double(index_j) * 0.002;
-		double v0 = 0.003 + 0.0002 * double(index_i) + double(index_j) * 0.002;
+		double v0 = 0.0004 * double(index_i) + double(index_j + 1) * 0.0015;
 
 		v0PrintObject << v0 << "," << Dr << "," << kb << "," << kl << "," << calA0 << "," << NCELLS << endl;
 
