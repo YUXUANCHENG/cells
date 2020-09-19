@@ -1152,11 +1152,12 @@ public:
 		double calA0 = 1.18;
 
 		//double kb = 0.0001 * (index_i + 1);
-		double kb = 0.00005 * pow(index_i +1, 2);
+		double kb = 0.00001 * pow(index_i +1, 2);
 		double kl = ratio * kb;
+		//double kl = 0.1;
 
 		//double phi_max = parallel_cal_phi_max(NCELLS, NV, seed, Lini, kl, kb);
-		double phi_max = 0.94;
+		double phi_max = 0.93;
 
 		// output files
 		string extend = "_jammed_" + to_string(index_i) + ".txt";
@@ -1203,8 +1204,12 @@ public:
 
 		//v0 = 0.04;
 		//double v0 = 0.002 + double(index_j) * 0.002;
-		double v0 = 0.0004 * double(index_i) + double(index_j + 1) * 0.0015;
-
+		double v0 = 0.0;
+		//if (index_i < 5)
+		//	v0 = 0.0008 * double(index_i) + double(index_j + 1) * 0.002;
+		//else
+		//	v0 = 0.0008 * double(index_i) + double(index_j + 1) * 0.004;
+		v0 = 0.0004 * double(index_i) + double(index_j + 1) * 0.0015;
 		v0PrintObject << v0 << "," << Dr << "," << kb << "," << kl << "," << calA0 << "," << NCELLS << endl;
 
 		// output files
