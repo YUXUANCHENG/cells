@@ -1282,39 +1282,6 @@ void subspace::activityCOM_brownian_insub(double T, double v0, double Dr, double
 
 };
 
-// conserve COM momentum
-void subspace::conserve_momentum() {
-	double factor = 0.0;
-	double system_p[2] = { 0.0, 0.0 };
-	double system_mass = 0.0;
-	double v_temp = 0.0;
-	if (!resident_cells.empty()) {
-		// get systems mass
-		for (int ci = 0; ci < resident_cells.size(); ci++) {
-			system_mass += resident_cells[ci]->getNV() * PI * pow(0.5 * resident_cells[ci]->getdel() * resident_cells[ci]->getl0(), 2);
-		}
-
-		//get system momentum
-		for (int ci = 0; ci < resident_cells.size(); ci++) {
-			for (int d = 0; d < NDIM; d++) {
-				system_p[d] += resident_cells[ci]->momentum(d);
-			}
-		}
-
-		// substract COM velocity
-		for (int ci = 0; ci < resident_cells.size(); ci++) {
-			for (int vi = 0; vi < resident_cells[ci]->getNV(); vi++) {
-				for (int d = 0; d < NDIM; d++) {
-
-					v_temp = resident_cells[ci]->vvel(vi, d) - system_p[d] / system_mass;
-					resident_cells[ci]->setVVel(vi, d, v_temp);
-				}
-			}
-		}
-	}
-
-}
-
 double subspace::max_length() {
 	double max_length = 0;
 	double length = 0;
